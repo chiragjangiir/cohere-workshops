@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from cohere_workshops.scanner import MAX_FILE_SIZE_BYTES, discover_source_files
+from cohere_workshops.scanner import (
+    MAX_FILE_SIZE_BYTES,
+    discover_source_files,
+    scan_repository,
+)
 
 
 def test_discovers_supported_files_and_ignores_generated_directories(
@@ -44,3 +48,20 @@ def test_ignores_sensitive_file_names(tmp_path: Path) -> None:
     ]
 
     assert discovered == [Path("config.json")]
+
+
+def test_records_safety_exclusions(tmp_path: Path) -> None:
+    (tmp_path / ".env").write_text("TOKEN=secret", encoding="utf-8")
+    (tmp_path / "large.py").write_bytes(b"x" * 1_000_001)
+    (tmp_path / "app.py").write_text("pass", encoding="utf-8")
+
+    result = scan_repository(tmp_path)
+
+    assert [path.name for path in result.files] == ["app.py"]
+    assert [
+        (excluded.path, excluded.reason)
+        for excluded in result.exclusions
+    ] == [
+        (".env", "sensitive_path"),
+        ("large.py", "file_too_large"),
+    ]
