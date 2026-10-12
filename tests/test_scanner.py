@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 
 from cohere_workshops.scanner import (
@@ -64,4 +65,31 @@ def test_records_safety_exclusions(tmp_path: Path) -> None:
     ] == [
         (".env", "sensitive_path"),
         ("large.py", "file_too_large"),
+    ]
+
+
+def test_respects_git_ignore_rules(tmp_path: Path) -> None:
+    subprocess.run(
+        ["git", "-C", str(tmp_path), "init", "-q"],
+        check=True,
+    )
+    (tmp_path / ".gitignore").write_text(
+        "ignored.py\nartifacts/\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "kept.py").write_text("pass", encoding="utf-8")
+    (tmp_path / "ignored.py").write_text("pass", encoding="utf-8")
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    (artifacts / "generated.py").write_text("pass", encoding="utf-8")
+
+    result = scan_repository(tmp_path)
+
+    assert [path.name for path in result.files] == ["kept.py"]
+    assert [
+        (excluded.path, excluded.reason)
+        for excluded in result.exclusions
+    ] == [
+        ("artifacts/generated.py", "git_ignored"),
+        ("ignored.py", "git_ignored"),
     ]
