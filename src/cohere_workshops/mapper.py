@@ -20,12 +20,22 @@ class MappedFile:
 
 
 @dataclass(frozen=True)
+class ProcessingError:
+    """A reproducible file-processing failure."""
+
+    path: str
+    stage: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class RepositoryMap:
     """A deterministic map of the supported files in a repository."""
 
     root: str
     files: tuple[MappedFile, ...]
     exclusions: tuple[ExcludedFile, ...]
+    errors: tuple[ProcessingError, ...]
 
 
 def map_repository(repository: Path) -> RepositoryMap:
@@ -33,16 +43,36 @@ def map_repository(repository: Path) -> RepositoryMap:
     repository = repository.resolve()
     scan_result = scan_repository(repository)
     mapped_files: list[MappedFile] = []
+    errors: list[ProcessingError] = []
 
     for path in scan_result.files:
-        document = load_document(path, repository)
+        relative_path = path.relative_to(repository).as_posix()
+
+        try:
+            document = load_document(path, repository)
+        except UnicodeDecodeError:
+            errors.append(
+                ProcessingError(relative_path, "load", "invalid_utf8")
+            )
+            continue
+
         symbols: tuple[CodeSymbol, ...] = ()
         imports: tuple[str, ...] = ()
 
         if document.language == "python":
-            structure = analyze_python(document)
-            symbols = structure.symbols
-            imports = structure.imports
+            try:
+                structure = analyze_python(document)
+            except SyntaxError:
+                errors.append(
+                    ProcessingError(
+                        document.path,
+                        "structure",
+                        "invalid_python_syntax",
+                    )
+                )
+            else:
+                symbols = structure.symbols
+                imports = structure.imports
 
         mapped_files.append(
             MappedFile(
@@ -58,4 +88,5 @@ def map_repository(repository: Path) -> RepositoryMap:
         root=repository.name,
         files=tuple(mapped_files),
         exclusions=scan_result.exclusions,
+        errors=tuple(errors),
     )

@@ -44,3 +44,25 @@ def test_includes_scanner_exclusions_in_repository_map(
         (excluded.path, excluded.reason)
         for excluded in result.exclusions
     ] == [(".env", "sensitive_path")]
+
+
+def test_records_processing_errors_without_stopping_repository_map(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "valid.py").write_text("def run():\n    pass\n", encoding="utf-8")
+    (tmp_path / "broken.py").write_text("def broken(:\n", encoding="utf-8")
+    (tmp_path / "binary.py").write_bytes(b"\xff\xfe")
+
+    result = map_repository(tmp_path)
+
+    assert [file.path for file in result.files] == [
+        "broken.py",
+        "valid.py",
+    ]
+    assert [
+        (error.path, error.stage, error.reason)
+        for error in result.errors
+    ] == [
+        ("binary.py", "load", "invalid_utf8"),
+        ("broken.py", "structure", "invalid_python_syntax"),
+    ]
