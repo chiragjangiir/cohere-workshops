@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from cohere_workshops.scanner import discover_source_files
+from cohere_workshops.scanner import MAX_FILE_SIZE_BYTES, discover_source_files
 
 
 def test_discovers_supported_files_and_ignores_generated_directories(
@@ -23,3 +23,9 @@ def test_discovers_supported_files_and_ignores_generated_directories(
         Path("README.md"),
         Path("app.py"),
     ]
+
+def test_ignores_files_larger_than_limit(tmp_path: Path) -> None:
+    oversized_file = tmp_path / "oversized.py"
+    oversized_file.write_bytes(b"x" * (MAX_FILE_SIZE_BYTES + 1))
+
+    assert discover_source_files(tmp_path) == []

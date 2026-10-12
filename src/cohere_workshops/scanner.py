@@ -2,6 +2,8 @@
 
 from pathlib import Path
 
+MAX_FILE_SIZE_BYTES = 1_000_000
+
 IGNORED_DIRECTORIES = {
     ".git",
     ".venv",
@@ -39,6 +41,7 @@ def discover_source_files(repository: Path) -> list[Path]:
         path
         for path in repository.rglob("*")
         if path.is_file()
+        and path.stat().st_size <= MAX_FILE_SIZE_BYTES
         and path.suffix.lower() in SUPPORTED_EXTENSIONS
         and not any(part in IGNORED_DIRECTORIES for part in path.relative_to(repository).parts)
     ]
