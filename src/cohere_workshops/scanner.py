@@ -4,6 +4,15 @@ from pathlib import Path
 
 MAX_FILE_SIZE_BYTES = 1_000_000
 
+SENSITIVE_FILE_NAMES = {
+    ".env",
+    "credentials.json",
+    "secrets.json",
+    "secrets.yaml",
+    "secrets.yml",
+    "service-account.json",
+}
+
 IGNORED_DIRECTORIES = {
     ".git",
     ".venv",
@@ -41,6 +50,7 @@ def discover_source_files(repository: Path) -> list[Path]:
         path
         for path in repository.rglob("*")
         if path.is_file()
+        and path.name.lower() not in SENSITIVE_FILE_NAMES
         and path.stat().st_size <= MAX_FILE_SIZE_BYTES
         and path.suffix.lower() in SUPPORTED_EXTENSIONS
         and not any(part in IGNORED_DIRECTORIES for part in path.relative_to(repository).parts)

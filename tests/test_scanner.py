@@ -29,3 +29,18 @@ def test_ignores_files_larger_than_limit(tmp_path: Path) -> None:
     oversized_file.write_bytes(b"x" * (MAX_FILE_SIZE_BYTES + 1))
 
     assert discover_source_files(tmp_path) == []
+
+
+def test_ignores_sensitive_file_names(tmp_path: Path) -> None:
+    (tmp_path / "config.json").write_text('{"safe": true}', encoding="utf-8")
+    (tmp_path / "credentials.json").write_text(
+        '{"api_key": "secret"}',
+        encoding="utf-8",
+    )
+
+    discovered = [
+        path.relative_to(tmp_path)
+        for path in discover_source_files(tmp_path)
+    ]
+
+    assert discovered == [Path("config.json")]
