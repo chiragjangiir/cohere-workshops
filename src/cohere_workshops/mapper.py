@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cohere_workshops.documents import load_document
+from cohere_workshops.safety import detect_secret_types
 from cohere_workshops.scanner import ExcludedFile, scan_repository
 from cohere_workshops.structure import CodeSymbol, analyze_python
 
@@ -43,6 +44,7 @@ def map_repository(repository: Path) -> RepositoryMap:
     repository = repository.resolve()
     scan_result = scan_repository(repository)
     mapped_files: list[MappedFile] = []
+    exclusions = list(scan_result.exclusions)
     errors: list[ProcessingError] = []
 
     for path in scan_result.files:
@@ -53,6 +55,12 @@ def map_repository(repository: Path) -> RepositoryMap:
         except UnicodeDecodeError:
             errors.append(
                 ProcessingError(relative_path, "load", "invalid_utf8")
+            )
+            continue
+
+        if detect_secret_types(document.content):
+            exclusions.append(
+                ExcludedFile(document.path, "suspected_secret")
             )
             continue
 
@@ -87,6 +95,8 @@ def map_repository(repository: Path) -> RepositoryMap:
     return RepositoryMap(
         root=repository.name,
         files=tuple(mapped_files),
-        exclusions=scan_result.exclusions,
+        exclusions=tuple(
+            sorted(exclusions, key=lambda item: item.path)
+        ),
         errors=tuple(errors),
     )

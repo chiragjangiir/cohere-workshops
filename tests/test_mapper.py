@@ -66,3 +66,21 @@ def test_records_processing_errors_without_stopping_repository_map(
         ("binary.py", "load", "invalid_utf8"),
         ("broken.py", "structure", "invalid_python_syntax"),
     ]
+
+
+def test_excludes_files_containing_suspected_secrets(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "safe.py").write_text("value = 1\n", encoding="utf-8")
+    (tmp_path / "unsafe.py").write_text(
+        'PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----"""\n',
+        encoding="utf-8",
+    )
+
+    result = map_repository(tmp_path)
+
+    assert [file.path for file in result.files] == ["safe.py"]
+    assert [
+        (excluded.path, excluded.reason)
+        for excluded in result.exclusions
+    ] == [("unsafe.py", "suspected_secret")]
