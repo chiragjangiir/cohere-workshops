@@ -12,11 +12,18 @@
   "rerank_k": 5,
   "cohere_sdk_version": "5.21.1",
   "key_type": "trial",
-  "ground_truth_status": "not_yet_available",
+  "ground_truth_status": "available_after_implementation",
   "latency": "not_recorded",
   "api_usage": "not_recorded",
   "notes": [
     "Exploratory development run, not part of the final evaluation set.",
     "Run before implementing .gitignore support."
-  ]
+  ],
+  "ground_truth_files": [
+    "src/cohere_workshops/scanner.py",
+    "tests/test_scanner.py"
+  ],
+  "implementation_commit": "6b68426b3e07159699194e4eee4a053a741a2a07",
+  "observed_result": "Both changed files appeared within the first three reranked chunks.",
+  "final_evaluation_eligible": false
 }
