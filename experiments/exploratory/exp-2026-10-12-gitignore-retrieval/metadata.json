@@ -1,0 +1,22 @@
+{
+  "experiment_id": "exp-2026-10-12-gitignore-retrieval",
+  "status": "exploratory",
+  "date": "2026-10-12",
+  "application_commit": "a2aa09fe9b84f833af1c53d9a8bb0ad41e70d311",
+  "repository_url": "https://github.com/dunia-hub/cohere-workshops.git",
+  "repository_commit": "a2aa09fe9b84f833af1c53d9a8bb0ad41e70d311",
+  "query": "Respect .gitignore rules when scanning a repository",
+  "embed_model": "embed-v4.0",
+  "rerank_model": "rerank-v4.0-pro",
+  "retrieval_k": 10,
+  "rerank_k": 5,
+  "cohere_sdk_version": "5.21.1",
+  "key_type": "trial",
+  "ground_truth_status": "not_yet_available",
+  "latency": "not_recorded",
+  "api_usage": "not_recorded",
+  "notes": [
+    "Exploratory development run, not part of the final evaluation set.",
+    "Run before implementing .gitignore support."
+  ]
+}

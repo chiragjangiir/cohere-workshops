@@ -1,0 +1,102 @@
+{
+  "root": "cohere-workshops",
+  "query": "Respect .gitignore rules when scanning a repository",
+  "embed_model": "embed-v4.0",
+  "rerank_model": "rerank-v4.0-pro",
+  "chunk_count": 119,
+  "exclusions": [
+    {
+      "path": ".env",
+      "reason": "sensitive_path"
+    },
+    {
+      "path": "tests/test_chunks.py",
+      "reason": "suspected_secret"
+    },
+    {
+      "path": "tests/test_corpus.py",
+      "reason": "suspected_secret"
+    },
+    {
+      "path": "tests/test_mapper.py",
+      "reason": "suspected_secret"
+    },
+    {
+      "path": "tests/test_safety.py",
+      "reason": "suspected_secret"
+    }
+  ],
+  "errors": [],
+  "evidence": [
+    {
+      "rank": 1,
+      "path": "src/cohere_workshops/scanner.py",
+      "kind": "function",
+      "symbol": "scan_repository",
+      "start_line": 59,
+      "end_line": 98,
+      "chunk_id": "26a6fa63fda0ccba12bd723a2c0fa9ef4ef636f1d98665d317a7a539a33477ff",
+      "content_hash": "03b2462480650d027a00fd0069727bdcc1f8b4ee57890a161f6f9bf206138c82",
+      "source_hash": "efd0d090bcb0a63d3ec33076c00ceded487e83965cd9f82f6c43c3391b3cd41c",
+      "semantic_score": 0.5211131516316986,
+      "rerank_score": 0.8352686,
+      "original_retrieval_rank": 1
+    },
+    {
+      "rank": 2,
+      "path": "src/cohere_workshops/scanner.py",
+      "kind": "file",
+      "symbol": null,
+      "start_line": 1,
+      "end_line": 103,
+      "chunk_id": "4ea6f4e5e908eb291ede20d2ff09c3e283ca2547cf19f1eec03debee30e64af1",
+      "content_hash": "efd0d090bcb0a63d3ec33076c00ceded487e83965cd9f82f6c43c3391b3cd41c",
+      "source_hash": "efd0d090bcb0a63d3ec33076c00ceded487e83965cd9f82f6c43c3391b3cd41c",
+      "semantic_score": 0.49065143065234257,
+      "rerank_score": 0.83419085,
+      "original_retrieval_rank": 2
+    },
+    {
+      "rank": 3,
+      "path": "tests/test_scanner.py",
+      "kind": "file",
+      "symbol": null,
+      "start_line": 1,
+      "end_line": 67,
+      "chunk_id": "1f2f31473b6a3f2c510b3380bb9208c305a02115fc20ad9fde388a78421d580e",
+      "content_hash": "8fd9bd0bbbe3156d2c44b6c587eee11c97c71b565c525403ed6f9a9132abb914",
+      "source_hash": "8fd9bd0bbbe3156d2c44b6c587eee11c97c71b565c525403ed6f9a9132abb914",
+      "semantic_score": 0.4735653655569899,
+      "rerank_score": 0.7985641,
+      "original_retrieval_rank": 3
+    },
+    {
+      "rank": 4,
+      "path": "tests/test_scanner.py",
+      "kind": "function",
+      "symbol": "test_discovers_supported_files_and_ignores_generated_directories",
+      "start_line": 10,
+      "end_line": 29,
+      "chunk_id": "e7c4ae3d717cd5d9adc302eb31bbd3923736f72744c6442e4937ba447e8c9a57",
+      "content_hash": "35a2c4bcabf023cce2187a5639c8c6b72e1ba938732f4a4ceec43cec6ef3cc1c",
+      "source_hash": "8fd9bd0bbbe3156d2c44b6c587eee11c97c71b565c525403ed6f9a9132abb914",
+      "semantic_score": 0.41736949951275637,
+      "rerank_score": 0.7502601,
+      "original_retrieval_rank": 4
+    },
+    {
+      "rank": 5,
+      "path": "tests/test_scanner.py",
+      "kind": "function",
+      "symbol": "test_records_safety_exclusions",
+      "start_line": 53,
+      "end_line": 67,
+      "chunk_id": "a1e64c5a249cd832bbdba84ab0d5eea7dc3a311832c45abcbd217c9d8805e8b7",
+      "content_hash": "7d1fc9fb66f0feaf67c8bec9dffec0dd22c44c8f66b3802f1d3de988f5391349",
+      "source_hash": "8fd9bd0bbbe3156d2c44b6c587eee11c97c71b565c525403ed6f9a9132abb914",
+      "semantic_score": 0.38485133650854,
+      "rerank_score": 0.6545415,
+      "original_retrieval_rank": 7
+    }
+  ]
+}
