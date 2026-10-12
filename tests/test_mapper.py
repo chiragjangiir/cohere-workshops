@@ -30,3 +30,17 @@ def test_builds_repository_map_from_supported_files(
     markdown_file = result.files[0]
     assert markdown_file.symbols == ()
     assert markdown_file.imports == ()
+
+def test_includes_scanner_exclusions_in_repository_map(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "app.py").write_text("pass", encoding="utf-8")
+    (tmp_path / ".env").write_text("TOKEN=secret", encoding="utf-8")
+
+    result = map_repository(tmp_path)
+
+    assert [file.path for file in result.files] == ["app.py"]
+    assert [
+        (excluded.path, excluded.reason)
+        for excluded in result.exclusions
+    ] == [(".env", "sensitive_path")]

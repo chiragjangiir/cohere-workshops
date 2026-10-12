@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cohere_workshops.documents import load_document
-from cohere_workshops.scanner import discover_source_files
+from cohere_workshops.scanner import ExcludedFile, scan_repository
 from cohere_workshops.structure import CodeSymbol, analyze_python
 
 
@@ -25,14 +25,16 @@ class RepositoryMap:
 
     root: str
     files: tuple[MappedFile, ...]
+    exclusions: tuple[ExcludedFile, ...]
 
 
 def map_repository(repository: Path) -> RepositoryMap:
     """Scan and structurally map a repository without using AI."""
     repository = repository.resolve()
+    scan_result = scan_repository(repository)
     mapped_files: list[MappedFile] = []
 
-    for path in discover_source_files(repository):
+    for path in scan_result.files:
         document = load_document(path, repository)
         symbols: tuple[CodeSymbol, ...] = ()
         imports: tuple[str, ...] = ()
@@ -55,4 +57,5 @@ def map_repository(repository: Path) -> RepositoryMap:
     return RepositoryMap(
         root=repository.name,
         files=tuple(mapped_files),
+        exclusions=scan_result.exclusions,
     )
