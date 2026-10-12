@@ -21,3 +21,4 @@ dev = [
 
 [project.scripts]
 cohere-workshops = "cohere_workshops.cli:main"
+cohere-search = "cohere_workshops.semantic_cli:main"
