@@ -22,7 +22,25 @@ async def scan() -> str:
 
     assert structure.imports == ("os", "pathlib")
     assert structure.symbols == (
-        CodeSymbol(name="Mapper", kind="class", line=4),
-        CodeSymbol(name="build", kind="function", line=5),
-        CodeSymbol(name="scan", kind="function", line=8),
+        CodeSymbol(
+            name="Mapper",
+            qualified_name="Mapper",
+            kind="class",
+            line=4,
+            end_line=6,
+        ),
+        CodeSymbol(
+            name="build",
+            qualified_name="Mapper.build",
+            kind="method",
+            line=5,
+            end_line=6,
+        ),
+        CodeSymbol(
+            name="scan",
+            qualified_name="scan",
+            kind="function",
+            line=8,
+            end_line=9,
+        ),
     )

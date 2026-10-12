@@ -24,7 +24,13 @@ def test_builds_repository_map_from_supported_files(
     python_file = result.files[1]
     assert python_file.imports == ("json",)
     assert python_file.symbols == (
-        CodeSymbol(name="run", kind="function", line=3),
+        CodeSymbol(
+            name="run",
+            qualified_name="run",
+            kind="function",
+            line=3,
+            end_line=4,
+        ),
     )
 
     markdown_file = result.files[0]
