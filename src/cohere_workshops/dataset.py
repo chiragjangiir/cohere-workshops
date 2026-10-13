@@ -16,6 +16,7 @@ class EvaluationCase:
     repository_url: str
     pull_request: int
     pre_change_commit: str
+    post_change_commit: str
     change_request: str
     ground_truth_files: tuple[str, ...]
     ground_truth_test_files: tuple[str, ...]
@@ -79,6 +80,12 @@ def _parse_case(payload: object) -> EvaluationCase:
             "pre_change_commit must be a lowercase 40-character Git commit"
         )
 
+    post_change_commit = _required_string(payload, "post_change_commit")
+    if not FULL_COMMIT_PATTERN.fullmatch(post_change_commit):
+        raise ValueError(
+            "post_change_commit must be a lowercase 40-character Git commit"
+        )
+
     change_request = _required_string(payload, "change_request")
     ground_truth_files = _repository_paths(
         payload.get("ground_truth_files"),
@@ -99,6 +106,7 @@ def _parse_case(payload: object) -> EvaluationCase:
         repository_url=repository_url,
         pull_request=pull_request,
         pre_change_commit=pre_change_commit,
+        post_change_commit=post_change_commit,
         change_request=change_request,
         ground_truth_files=ground_truth_files,
         ground_truth_test_files=ground_truth_test_files,

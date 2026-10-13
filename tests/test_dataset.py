@@ -19,6 +19,7 @@ def valid_case(case_id: str = "example-101") -> dict[str, object]:
         "repository_url": "https://github.com/example/project.git",
         "pull_request": 101,
         "pre_change_commit": "a" * 40,
+        "post_change_commit": "b" * 40,
         "change_request": "Respect Git ignore rules during scanning.",
         "ground_truth_files": [
             "src/project/scanner.py",
@@ -40,6 +41,7 @@ def test_loads_reproducible_dataset_manifest(tmp_path: Path) -> None:
     assert case.case_id == "example-101"
     assert case.pull_request == 101
     assert case.pre_change_commit == "a" * 40
+    assert case.post_change_commit == "b" * 40
     assert case.ground_truth_test_files == ("tests/test_scanner.py",)
 
 
