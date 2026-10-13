@@ -1,0 +1,46 @@
+"""Command-line interface for building one evaluation case."""
+
+import argparse
+import json
+from collections.abc import Sequence
+from dataclasses import asdict
+from pathlib import Path
+
+from cohere_workshops.case_builder import build_evaluation_case
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Create the evaluation-case command-line parser."""
+    parser = argparse.ArgumentParser(
+        description=(
+            "Build one research evaluation case from an exact Git "
+            "commit range."
+        )
+    )
+    parser.add_argument("repository", help="Local Git repository.")
+    parser.add_argument("--case-id", required=True)
+    parser.add_argument("--repository-url", required=True)
+    parser.add_argument("--pull-request", required=True, type=int)
+    parser.add_argument("--pre-change-commit", required=True)
+    parser.add_argument("--post-change-commit", required=True)
+    parser.add_argument("--change-request", required=True)
+    return parser
+
+
+def main(arguments: Sequence[str] | None = None) -> None:
+    """Build and print a JSON evaluation case."""
+    options = build_parser().parse_args(arguments)
+    case = build_evaluation_case(
+        Path(options.repository),
+        case_id=options.case_id,
+        repository_url=options.repository_url,
+        pull_request=options.pull_request,
+        pre_change_commit=options.pre_change_commit,
+        post_change_commit=options.post_change_commit,
+        change_request=options.change_request,
+    )
+    print(json.dumps(asdict(case), indent=2))
+
+
+if __name__ == "__main__":
+    main()
