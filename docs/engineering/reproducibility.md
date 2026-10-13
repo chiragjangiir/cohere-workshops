@@ -88,6 +88,18 @@ Map another local repository:
 cohere-workshops /path/to/repository
 ```
 
+Run Cohere Embed and Rerank retrieval:
+
+```bash
+cohere-search /path/to/repository "change request"
+```
+
+Add structural import expansion and generate a validated prediction:
+
+```bash
+cohere-search /path/to/repository "change request" --structural --predict
+```
+
 The result is written as JSON to standard output.
 
 Save a result when required:
@@ -247,11 +259,12 @@ A published result should provide:
 The project does not yet have:
 
 - A dependency lock file
-- A formal dataset manifest
-- Experiment-run directories
-- Versioned prompts
-- Stored API-usage records
-- Automated benchmark commands
+- A formal pull-request dataset manifest and builder
+- A versioned prompt registry
+- Complete stored latency and API-usage records
+- An ungrounded Command baseline
+- Automated aggregate benchmark commands
+- Embedding caching
 - Continuous-integration configuration
 
 These must be addressed before the final evaluation.
