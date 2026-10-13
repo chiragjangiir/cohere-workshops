@@ -41,7 +41,7 @@ class Greeter:
 def test_refuses_to_chunk_suspected_secrets(tmp_path: Path) -> None:
     source_file = tmp_path / "unsafe.py"
     source_file.write_text(
-        'KEY = """-----BEGIN PRIVATE KEY-----"""\n',
+        'KEY = """-----BEGIN ' + 'PRIVATE KEY-----"""\n',
         encoding="utf-8",
     )
     document = load_document(source_file, tmp_path)

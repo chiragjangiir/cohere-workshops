@@ -79,7 +79,8 @@ def test_excludes_files_containing_suspected_secrets(
 ) -> None:
     (tmp_path / "safe.py").write_text("value = 1\n", encoding="utf-8")
     (tmp_path / "unsafe.py").write_text(
-        'PRIVATE_KEY = """-----BEGIN PRIVATE KEY-----"""\n',
+        'PRIVATE_KEY = """-----BEGIN '
+        + 'PRIVATE KEY-----"""\n',
         encoding="utf-8",
     )
 

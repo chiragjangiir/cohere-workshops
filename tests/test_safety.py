@@ -2,12 +2,14 @@ from cohere_workshops.safety import detect_secret_types
 
 
 def test_detects_high_confidence_secret_patterns() -> None:
-    content = """
------BEGIN PRIVATE KEY-----
-AKIAIOSFODNN7EXAMPLE
-ghp_abcdefghijklmnopqrstuvwxyzABCDEFGHIJ
-AIzaAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-"""
+    content = "\n".join(
+        (
+            "-----BEGIN " + "PRIVATE KEY-----",
+            "AKIA" + "IOSFODNN7EXAMPLE",
+            "ghp_" + "abcdefghijklmnopqrstuvwxyzABCDEFGHIJ",
+            "AIza" + ("A" * 35),
+        )
+    )
 
     assert detect_secret_types(content) == (
         "private_key",

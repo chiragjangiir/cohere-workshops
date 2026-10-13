@@ -9,7 +9,7 @@ def test_builds_safe_repository_corpus(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     (tmp_path / "unsafe.py").write_text(
-        'KEY = """-----BEGIN PRIVATE KEY-----"""\n',
+        'KEY = """-----BEGIN ' + 'PRIVATE KEY-----"""\n',
         encoding="utf-8",
     )
     (tmp_path / "broken.py").write_text(
