@@ -13,7 +13,7 @@
   "rerank_k": 5,
   "cohere_sdk_version": "5.21.1",
   "key_type": "trial",
-  "ground_truth_status": "not_yet_available",
+  "ground_truth_status": "available_after_implementation",
   "latency": "not_recorded",
   "api_usage": "not_recorded",
   "retry_count": 3,
@@ -27,5 +27,58 @@
   "notes": [
     "Exploratory development run, not part of the final evaluation set.",
     "Run before implementing bounded chunk splitting."
-  ]
+  ],
+  "ground_truth_files": [
+    "src/cohere_workshops/chunks.py",
+    "src/cohere_workshops/embeddings.py",
+    "tests/test_chunks.py"
+  ],
+  "implementation_commit": "c7226ec6f97cf1c979492f47df82cd69b94a51eb",
+  "retrieval_metrics": {
+    "predicted_files": [
+      "src/cohere_workshops/chunks.py",
+      "src/cohere_workshops/corpus.py",
+      "src/cohere_workshops/embeddings.py"
+    ],
+    "ground_truth_files": [
+      "src/cohere_workshops/chunks.py",
+      "src/cohere_workshops/embeddings.py",
+      "tests/test_chunks.py"
+    ],
+    "recall_at_k": {
+      "1": 0.3333333333333333,
+      "3": 0.6666666666666666,
+      "5": 0.6666666666666666
+    },
+    "precision_at_k": {
+      "1": 1.0,
+      "3": 0.6666666666666666,
+      "5": 0.4
+    },
+    "reciprocal_rank": 1.0,
+    "average_precision": 0.5555555555555555
+  },
+  "prediction_metrics": {
+    "predicted_files": [
+      "src/cohere_workshops/chunks.py"
+    ],
+    "ground_truth_files": [
+      "src/cohere_workshops/chunks.py",
+      "src/cohere_workshops/embeddings.py",
+      "tests/test_chunks.py"
+    ],
+    "recall_at_k": {
+      "1": 0.3333333333333333,
+      "3": 0.3333333333333333,
+      "5": 0.3333333333333333
+    },
+    "precision_at_k": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2
+    },
+    "reciprocal_rank": 1.0,
+    "average_precision": 0.3333333333333333
+  },
+  "observed_result": "Retrieval found chunks.py and embeddings.py. Command predicted chunks.py. The changed test file was unavailable because its synthetic private-key fixture triggered safety exclusion."
 }
