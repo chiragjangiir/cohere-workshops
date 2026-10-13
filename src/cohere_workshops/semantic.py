@@ -13,6 +13,8 @@ from cohere_workshops.embeddings import (
     embed_chunks,
     embed_query,
 )
+from cohere_workshops.mapper import map_repository
+from cohere_workshops.relationships import resolve_import_relationships
 from cohere_workshops.reranking import (
     RerankClient,
     RerankedChunk,
@@ -20,6 +22,9 @@ from cohere_workshops.reranking import (
 )
 from cohere_workshops.retrieval import retrieve_chunks
 from cohere_workshops.scanner import ExcludedFile
+from cohere_workshops.structural_retrieval import (
+    expand_with_import_relationships,
+)
 
 
 class SemanticClient(EmbedClient, RerankClient, Protocol):
@@ -34,6 +39,7 @@ class SemanticSearchResult:
     chunk_count: int
     exclusions: tuple[ExcludedFile, ...]
     errors: tuple[CorpusError, ...]
+    structural_expansion: bool
     results: tuple[RerankedChunk, ...]
 
 
@@ -44,6 +50,8 @@ def semantic_search_repository(
     *,
     retrieval_k: int = 20,
     rerank_k: int = 10,
+    structural_expansion: bool = False,
+    max_structural_expansions: int = 10,
 ) -> SemanticSearchResult:
     """Retrieve and rerank repository evidence for a change request."""
     if not query.strip():
@@ -57,6 +65,7 @@ def semantic_search_repository(
             chunk_count=0,
             exclusions=corpus.exclusions,
             errors=corpus.errors,
+            structural_expansion=structural_expansion,
             results=(),
         )
 
@@ -67,6 +76,18 @@ def semantic_search_repository(
         embedded_chunks,
         top_k=retrieval_k,
     )
+
+    if structural_expansion:
+        repository_map = map_repository(repository)
+        relationships = resolve_import_relationships(repository_map)
+        retrieved = expand_with_import_relationships(
+            query_vector,
+            retrieved,
+            embedded_chunks,
+            relationships,
+            max_expansions=max_structural_expansions,
+        )
+
     reranked = rerank_chunks(
         client,
         query,
@@ -79,5 +100,6 @@ def semantic_search_repository(
         chunk_count=len(corpus.chunks),
         exclusions=corpus.exclusions,
         errors=corpus.errors,
+        structural_expansion=structural_expansion,
         results=reranked,
     )

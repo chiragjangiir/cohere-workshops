@@ -42,6 +42,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Number of candidates to return after reranking.",
     )
     parser.add_argument(
+        "--structural",
+        action="store_true",
+        help="Expand semantic candidates using local import relationships.",
+    )
+    parser.add_argument(
+        "--max-structural-expansions",
+        type=int,
+        default=10,
+        help="Maximum number of structurally related chunks to add.",
+    )
+    parser.add_argument(
         "--predict",
         action="store_true",
         help="Generate a grounded Command change-impact prediction.",
@@ -82,6 +93,7 @@ def serialize_search_result(
         "embed_model": EMBED_MODEL,
         "rerank_model": RERANK_MODEL,
         "chunk_count": result.chunk_count,
+        "structural_expansion": result.structural_expansion,
         "exclusions": [asdict(item) for item in result.exclusions],
         "errors": [asdict(item) for item in result.errors],
         "evidence": evidence,
@@ -107,6 +119,8 @@ def main(arguments: Sequence[str] | None = None) -> None:
         options.query,
         retrieval_k=options.retrieval_k,
         rerank_k=options.rerank_k,
+        structural_expansion=options.structural,
+        max_structural_expansions=options.max_structural_expansions,
     )
     payload = serialize_search_result(result, options.query)
 

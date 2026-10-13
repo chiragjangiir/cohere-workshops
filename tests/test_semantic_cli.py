@@ -13,6 +13,7 @@ def test_serializes_metadata_without_vectors_or_source_content() -> None:
         chunk_count=0,
         exclusions=(ExcludedFile(".env", "sensitive_path"),),
         errors=(CorpusError("broken.py", "chunk", "invalid_python_syntax"),),
+        structural_expansion=False,
         results=(),
     )
 
@@ -43,3 +44,12 @@ def test_accepts_grounded_prediction_option() -> None:
     )
 
     assert options.predict is True
+
+
+def test_accepts_structural_expansion_option() -> None:
+    options = build_parser().parse_args(
+        [".", "Update scanning", "--structural"]
+    )
+
+    assert options.structural is True
+    assert options.max_structural_expansions == 10
