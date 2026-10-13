@@ -2,268 +2,215 @@
 
 ## Status
 
-Current and planned architecture for the evidence-grounded change-impact prototype.
+Implemented and planned architecture for the evidence-grounded change-impact research prototype.
+
+Last updated: 13 October 2026
 
 ## Design principle
 
-Deterministic repository evidence must be created before any model is asked to reason about a proposed change.
+Deterministic repository evidence is created and validated before a model reasons about a proposed change. Models are not treated as sources of truth for file existence, symbols, imports, exclusions or evaluation ground truth.
 
-The language model must not be treated as the source of truth for repository structure, file existence, symbols, imports or historical changes.
-
-## Current architecture
+## Implemented pipeline
 
 ```mermaid
 flowchart TD
-    A[Local repository] --> B[File scanner]
+    A[Local repository] --> B[Safe scanner]
     B --> C[Document loader]
-    C --> D[SHA-256 hashing]
-    C --> E[Python AST analyzer]
-    D --> F[Repository mapper]
-    E --> F
-    F --> G[JSON CLI output]
+    C --> D[Python AST analysis]
+    C --> E[Deterministic chunking]
+    D --> E
+    E --> F[Cohere Embed]
+    Q[Change request] --> G[Query embedding]
+    F --> H[Cosine retrieval]
+    G --> H
+    H --> I[Optional import expansion]
+    I --> J[Cohere Rerank]
+    J --> K[Cohere Command prediction]
+    K --> L[Local evidence validator]
+    L --> M[Prediction or abstention]
 ```
 
-## Current components
+The same repository corpus also supports a deterministic BM25 keyword baseline.
 
-### File scanner
+## Safety and ingestion
 
-Location: `src/cohere_workshops/scanner.py`
+### Repository scanner
 
-Responsibilities:
+`src/cohere_workshops/scanner.py`
 
-- Recursively discover supported files
-- Exclude generated and dependency directories
-- Return files in deterministic order
-- Reject invalid repository paths
+The scanner:
 
-### Document loader
+- discovers supported text files in deterministic order;
+- applies directory exclusions and Git ignore rules;
+- rejects sensitive filenames;
+- excludes files larger than 1,000,000 bytes;
+- records every exclusion and its reason.
 
-Location: `src/cohere_workshops/documents.py`
+### Secret detection
 
-Responsibilities:
+`src/cohere_workshops/safety.py`
 
-- Read repository files as UTF-8 text
-- Record repository-relative paths
-- Detect the language from the file extension
-- Generate stable SHA-256 content hashes
+High-confidence patterns for private keys and selected provider credentials are detected before content enters the model pipeline. Suspected files are excluded and recorded. Test fixtures construct fake patterns at runtime so the repository itself is not incorrectly excluded.
 
-### Python structure analyzer
+### Document loading
 
-Location: `src/cohere_workshops/structure.py`
+`src/cohere_workshops/documents.py`
 
-Responsibilities:
+Accepted files are decoded as UTF-8, assigned repository-relative paths and languages, and hashed with SHA-256. Invalid UTF-8 is recorded as a processing error rather than terminating the complete scan.
 
-- Parse Python source using `ast`
-- Extract functions and classes
-- Extract imports
-- Record source line numbers
-- Reject non-Python documents
+## Deterministic repository evidence
 
-### Repository mapper
+### Python structure
 
-Location: `src/cohere_workshops/mapper.py`
+`src/cohere_workshops/structure.py`
 
-Responsibilities:
+Python's AST provides:
 
-- Coordinate file discovery and document loading
-- Apply structural analysis to Python files
-- Create one deterministic repository map
-- Keep non-Python files without invented structure
+- classes, functions and methods;
+- qualified symbol names;
+- start and end lines;
+- imports.
 
-### Command-line interface
+Malformed Python is recorded as a processing error. Non-Python files remain available as text but do not receive invented structural metadata.
 
-Location: `src/cohere_workshops/cli.py`
+### Repository map
 
-Responsibilities:
+`src/cohere_workshops/mapper.py`
 
-- Accept a local repository path
-- Build the repository map
-- Serialize the map as JSON
-- Write results to standard output
+The map combines file metadata, hashes, symbols, imports, exclusions and processing errors. The `cohere-workshops` command serializes this evidence as JSON.
 
-### Cohere practice request
+### Traceable chunks
 
-Location: `src/cohere_workshops/hello_cohere.py`
+`src/cohere_workshops/chunks.py` and `src/cohere_workshops/corpus.py`
 
-Responsibilities:
+The corpus contains deterministic file-level and symbol-level chunks. Every chunk retains:
 
-- Load the private Cohere API key
-- Create a Cohere `ClientV2`
-- Make one minimal Chat request
-- Confirm that the SDK and credentials work
+- source path and language;
+- kind and optional symbol;
+- start and end lines;
+- source and chunk hashes;
+- stable chunk identifier;
+- part index and count when content is split.
 
-This module is a connection test and is not part of the change-impact pipeline.
+Chunks are capped at 12,000 characters while preserving full source coverage, including exceptionally long lines.
 
-## Current data flow
+## Retrieval configurations
 
-1. A repository path enters the command-line interface.
-2. The scanner discovers supported files.
-3. The document loader reads and hashes each file.
-4. Python files are parsed with the AST analyzer.
-5. The mapper combines document and structural evidence.
-6. The CLI returns the map as JSON.
+### BM25 baseline
 
-## Current repository map
+`src/cohere_workshops/keyword.py`
 
-Each mapped file contains:
+A local deterministic BM25 implementation provides the lexical baseline without using Cohere credits.
 
-- Repository-relative path
-- Detected language
-- SHA-256 content hash
-- Extracted symbols
-- Extracted imports
+### Cohere Embed retrieval
 
-Each extracted symbol contains:
+`src/cohere_workshops/embeddings.py` and `src/cohere_workshops/retrieval.py`
 
-- Name
-- Kind
-- Starting line number
+Repository chunks use `embed-v4.0` with the `search_document` input type. Change requests use `search_query`. Local cosine similarity ranks the initial candidates.
 
-## Planned architecture
+### Structural expansion
 
-```mermaid
-flowchart TD
-    A[Pre-change repository] --> B[Deterministic repository map]
-    B --> C[Symbol-level chunks]
-    C --> D[Cohere Embed]
-    E[Change request] --> F[Query embedding]
-    D --> G[Candidate retrieval]
-    F --> G
-    G --> H[Cohere Rerank]
-    H --> I[Structural evidence layer]
-    I --> J[Cohere Command]
-    J --> K[Evidence validator]
-    K --> L{Enough evidence?}
-    L -->|Yes| M[Ranked change-impact prediction]
-    L -->|No| N[Abstention with reason]
+`src/cohere_workshops/relationships.py` and `src/cohere_workshops/structural_retrieval.py`
+
+The optional structural configuration resolves local Python import relationships and adds bounded one-hop related files to the candidate set. Every expansion remains tied to deterministic repository evidence.
+
+### Cohere Rerank
+
+`src/cohere_workshops/reranking.py`
+
+`rerank-v4.0-pro` reranks only the supplied candidates against the original change request. It cannot introduce content outside that set.
+
+### Semantic orchestration
+
+`src/cohere_workshops/semantic.py`
+
+This layer coordinates corpus construction, embedding, retrieval, optional structural expansion and reranking.
+
+## Evidence-grounded prediction
+
+`src/cohere_workshops/prediction.py`
+
+`command-a-plus-05-2026` receives the change request and reranked evidence. JSON Schema constrains the response to supported paths, symbols, chunk identifiers and test paths.
+
+The local validator then checks:
+
+- predicted files exist in retrieved evidence;
+- symbols are supported by cited evidence;
+- evidence identifiers are valid;
+- test paths are supported;
+- confidence values are within range;
+- duplicate file predictions are normalized;
+- required fields are present.
+
+Unsupported model output is rejected. When no usable repository evidence is available, the system returns an explicit abstention with a reason.
+
+## Command-line interfaces
+
+### Repository mapping
+
+```bash
+cohere-workshops /path/to/repository
 ```
 
-## Planned components
+### Semantic retrieval and prediction
 
-### Chunking layer
+```bash
+cohere-search /path/to/repository "change request"
+cohere-search /path/to/repository "change request" --structural
+cohere-search /path/to/repository "change request" --structural --predict
+```
 
-Will divide repository content into stable, traceable units such as:
+The search command returns JSON containing configuration, exclusions, errors, ranked evidence and, when requested, a validated prediction. It does not expose API keys, embedding vectors or complete source content.
 
-- File summaries
-- Classes
-- Functions
-- Methods
-- Tests
-- Configuration sections
-- Documentation sections
+## Evaluation boundary
 
-Every chunk must retain its file path, line range, content hash and structural metadata.
+`src/cohere_workshops/evaluation.py`
 
-### Cohere Embed layer
+Metrics are calculated locally from recorded predictions and pull-request ground truth. Implemented file-level metrics include:
 
-Will create separate embeddings for:
+- Recall@K;
+- Precision@K;
+- reciprocal rank;
+- average precision.
 
-- Repository documents using `search_document`
-- Change requests using `search_query`
+Ground truth must come from merged pull-request diffs against pre-change repository snapshots. Models do not generate ground truth.
 
-The first implementation will use Cohere `embed-v4.0`.
-
-Raw source content must remain traceable to its embedding record.
-
-### Candidate retrieval layer
-
-Will rank repository chunks using vector similarity and return a configurable candidate set.
-
-Retrieval must preserve:
-
-- Chunk identifier
-- Source path
-- Line range
-- Similarity score
-- Content hash
-
-### Cohere Rerank layer
-
-Will rerank the retrieved candidates against the original change request.
-
-Reranking must not introduce files that were absent from the retrieved candidate set.
-
-### Structural evidence layer
-
-Will combine semantic relevance with deterministic relationships such as:
-
-- Imports
-- Symbol ownership
-- Test-to-source relationships
-- Configuration references
-- File paths
-- Dependency direction
-
-### Cohere Command layer
-
-Will produce a structured prediction containing:
-
-- Predicted files
-- Predicted symbols
-- Predicted tests
-- Evidence references
-- Confidence
-- Unresolved questions
-- Abstention status and reason
-
-### Evidence validator
-
-Will verify that:
-
-- Every predicted file exists
-- Every predicted symbol exists
-- Every evidence reference points to retrieved repository content
-- Scores fall within the permitted range
-- Required fields are present
-- Unsupported claims are rejected
-
-## Deterministic and model boundaries
+## Deterministic and model-assisted boundaries
 
 | Deterministic responsibilities | Model-assisted responsibilities |
 | --- | --- |
-| File discovery | Semantic similarity |
-| File existence | Candidate reranking |
-| Content hashing | Natural-language explanation |
-| AST parsing | Change-impact reasoning |
-| Symbol existence | Uncertainty description |
-| Import extraction | Structured prediction |
-| Diff-based ground truth | Recommended investigation order |
-| Metric calculation | None of the ground-truth calculation |
+| File discovery and exclusions | Semantic embeddings |
+| Git ignore evaluation | Candidate reranking |
+| Secret-pattern checks | Structured change-impact reasoning |
+| UTF-8 loading and hashing | Natural-language reasons |
+| AST parsing and import resolution | Confidence and unresolved questions |
+| Chunk construction and identifiers | Evidence-linked predictions |
+| Local output validation | Abstention recommendation |
+| Diff-based ground truth and metrics | None of the ground-truth calculation |
 
 ## Security boundaries
 
-- Cohere API keys remain in `.env`.
-- `.env` is excluded from Git.
-- Repository content is sent to Cohere only by explicit application actions.
-- Tests must use fixtures or mocks.
-- Tests must never make live API requests.
-- Private repositories are outside the initial research scope.
-- Secrets and unsupported binary files must not be indexed.
-- Logs must not contain API keys.
+- Cohere credentials remain in `.env`, which is excluded from Git and scanning.
+- Repository content reaches Cohere only through an explicit live command.
+- Automated tests use fake clients and do not spend API credits.
+- Private repositories are outside the research scope.
+- Sensitive paths, oversized files and suspected secrets are excluded before model calls.
+- Output and logs must never contain API keys.
 
-## Reproducibility requirements
+## Reproducibility
 
-Every generated result must be traceable to:
+Every formal result must be traceable to the repository URL and pre-change commit, application commit, source hashes, chunk identifiers, model names, request configuration, experiment identifier, prediction and diff-derived ground truth.
 
-- Repository URL
-- Repository commit
-- File content hash
-- Chunk identifier
-- Model name
-- Request configuration
-- Application commit
-- Experiment identifier
+Exploratory development runs are stored separately from the final evaluation dataset.
 
-## Known limitations
+## Remaining architecture work
 
-The current implementation:
+The prototype still requires:
 
-- Performs structural parsing only for Python
-- Reads complete UTF-8 files
-- Does not yet respect every repository-specific ignore rule
-- Does not enforce file-size limits
-- Does not detect secrets before processing
-- Does not create symbol-level chunks
-- Does not persist repository maps
-- Does not call Cohere Embed or Rerank
-- Does not predict code changes
+- a reproducible pull-request dataset builder and manifest;
+- an ungrounded Command baseline;
+- an aggregate benchmark runner for every configuration;
+- embedding caching;
+- exact dependency locking;
+- continuous integration;
+- final experiment artifact and API-usage recording.
