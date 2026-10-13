@@ -158,3 +158,47 @@ def test_abstains_without_repository_evidence() -> None:
     assert result.abstain is True
     assert result.predictions == ()
     assert client.calls == []
+
+
+
+def test_merges_duplicate_file_predictions() -> None:
+    client = FakeClient(
+        {
+            "abstain": False,
+            "abstention_reason": "",
+            "predictions": [
+                {
+                    "path": "src/cohere_workshops/scanner.py",
+                    "symbols": ["scan_repository"],
+                    "evidence_chunk_ids": ["scanner-chunk"],
+                    "confidence": 0.8,
+                    "reason": "Update scanning.",
+                },
+                {
+                    "path": "src/cohere_workshops/scanner.py",
+                    "symbols": [],
+                    "evidence_chunk_ids": ["scanner-chunk"],
+                    "confidence": 0.9,
+                    "reason": "Preserve repository safety.",
+                },
+            ],
+            "predicted_tests": [],
+            "unresolved_questions": [],
+        }
+    )
+
+    result = predict_change_impact(
+        client,
+        "Respect Git ignore rules",
+        make_evidence(),
+    )
+
+    assert len(result.predictions) == 1
+    assert result.predictions[0].confidence == 0.9
+    assert result.predictions[0].symbols == ("scan_repository",)
+    assert result.predictions[0].evidence_chunk_ids == (
+        "scanner-chunk",
+    )
+    assert result.predictions[0].reason == (
+        "Update scanning. Preserve repository safety."
+    )

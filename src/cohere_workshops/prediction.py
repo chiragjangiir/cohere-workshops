@@ -184,7 +184,7 @@ def _parse_prediction(
     }
 
     predictions: list[FilePrediction] = []
-    seen_paths: set[str] = set()
+    prediction_positions: dict[str, int] = {}
 
     for raw in raw_predictions:
         if not isinstance(raw, dict):
@@ -196,8 +196,6 @@ def _parse_prediction(
 
         if not isinstance(path, str) or path not in allowed_paths:
             raise ValueError("prediction contains an unsupported file path")
-        if path in seen_paths:
-            raise ValueError("prediction contains a duplicate file path")
         if not isinstance(confidence, (int, float)) or isinstance(
             confidence,
             bool,
@@ -224,16 +222,41 @@ def _parse_prediction(
         ):
             raise ValueError("prediction cites unsupported evidence")
 
-        seen_paths.add(path)
-        predictions.append(
-            FilePrediction(
-                path=path,
-                symbols=symbols,
-                evidence_chunk_ids=evidence_ids,
-                confidence=float(confidence),
-                reason=reason,
-            )
+        prediction = FilePrediction(
+            path=path,
+            symbols=symbols,
+            evidence_chunk_ids=evidence_ids,
+            confidence=float(confidence),
+            reason=reason,
         )
+
+        if path not in prediction_positions:
+            prediction_positions[path] = len(predictions)
+            predictions.append(prediction)
+        else:
+            position = prediction_positions[path]
+            existing = predictions[position]
+            combined_reason = existing.reason
+
+            if reason != existing.reason:
+                combined_reason = f"{existing.reason} {reason}"
+
+            predictions[position] = FilePrediction(
+                path=path,
+                symbols=tuple(
+                    dict.fromkeys((*existing.symbols, *symbols))
+                ),
+                evidence_chunk_ids=tuple(
+                    dict.fromkeys(
+                        (
+                            *existing.evidence_chunk_ids,
+                            *evidence_ids,
+                        )
+                    )
+                ),
+                confidence=max(existing.confidence, float(confidence)),
+                reason=combined_reason,
+            )
 
     predicted_tests = _require_string_list(
         payload["predicted_tests"],
