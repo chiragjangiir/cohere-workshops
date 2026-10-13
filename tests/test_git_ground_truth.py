@@ -81,3 +81,57 @@ def test_includes_deleted_files_in_ground_truth(tmp_path: Path) -> None:
     )
 
     assert result.files == ("removed.py",)
+
+def test_verifies_manifest_ground_truth_against_git(tmp_path: Path) -> None:
+    from cohere_workshops.dataset import EvaluationCase
+    from cohere_workshops.git_ground_truth import verify_case_ground_truth
+
+    git(tmp_path, "init")
+    source = tmp_path / "app.py"
+    source.write_text("VALUE = 1\n", encoding="utf-8")
+    pre_change = commit_all(tmp_path, "Initial state")
+    source.write_text("VALUE = 2\n", encoding="utf-8")
+    post_change = commit_all(tmp_path, "Update app")
+    case = EvaluationCase(
+        case_id="example-1",
+        repository_url="https://github.com/example/project.git",
+        pull_request=1,
+        pre_change_commit=pre_change,
+        post_change_commit=post_change,
+        change_request="Update the application value.",
+        ground_truth_files=("app.py",),
+        ground_truth_test_files=(),
+    )
+
+    result = verify_case_ground_truth(tmp_path, case)
+
+    assert result.files == ("app.py",)
+
+
+def test_rejects_manifest_ground_truth_that_disagrees_with_git(
+    tmp_path: Path,
+) -> None:
+    import pytest
+
+    from cohere_workshops.dataset import EvaluationCase
+    from cohere_workshops.git_ground_truth import verify_case_ground_truth
+
+    git(tmp_path, "init")
+    source = tmp_path / "app.py"
+    source.write_text("VALUE = 1\n", encoding="utf-8")
+    pre_change = commit_all(tmp_path, "Initial state")
+    source.write_text("VALUE = 2\n", encoding="utf-8")
+    post_change = commit_all(tmp_path, "Update app")
+    case = EvaluationCase(
+        case_id="example-1",
+        repository_url="https://github.com/example/project.git",
+        pull_request=1,
+        pre_change_commit=pre_change,
+        post_change_commit=post_change,
+        change_request="Update the application value.",
+        ground_truth_files=("wrong.py",),
+        ground_truth_test_files=(),
+    )
+
+    with pytest.raises(ValueError, match="does not match Git diff"):
+        verify_case_ground_truth(tmp_path, case)

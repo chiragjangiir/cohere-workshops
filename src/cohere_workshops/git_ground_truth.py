@@ -4,7 +4,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from cohere_workshops.dataset import FULL_COMMIT_PATTERN
+from cohere_workshops.dataset import FULL_COMMIT_PATTERN, EvaluationCase
 
 
 @dataclass(frozen=True)
@@ -93,3 +93,25 @@ def extract_diff_ground_truth(
         files=files,
         test_files=tuple(path for path in files if is_test_path(path)),
     )
+
+def verify_case_ground_truth(
+    repository: Path,
+    case: EvaluationCase,
+) -> DiffGroundTruth:
+    """Verify that a manifest case matches the committed Git diff."""
+    ground_truth = extract_diff_ground_truth(
+        repository,
+        case.pre_change_commit,
+        case.post_change_commit,
+    )
+
+    if ground_truth.files != tuple(sorted(case.ground_truth_files)):
+        raise ValueError(
+            f"Case {case.case_id} file ground truth does not match Git diff"
+        )
+    if ground_truth.test_files != tuple(sorted(case.ground_truth_test_files)):
+        raise ValueError(
+            f"Case {case.case_id} test ground truth does not match Git diff"
+        )
+
+    return ground_truth
