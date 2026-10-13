@@ -62,7 +62,8 @@ The merged pull-request diff provides the primary ground truth.
 2. Cohere Embed retrieval
 3. Cohere Embed with Cohere Rerank
 4. Structural and semantic retrieval
-5. Evidence-grounded prediction with abstention
+5. Ungrounded Cohere Command prediction
+6. Evidence-grounded prediction with abstention
 
 Each configuration will receive the same change request and pre-change repository snapshot.
 
@@ -101,9 +102,17 @@ It currently supports:
 - Symbol and import extraction
 - Structural repository mapping
 - JSON command-line output
-- A basic Cohere Chat request
+- Safety exclusions and processing-error records
+- Deterministic file-level and symbol-level chunks
+- BM25 keyword retrieval
+- Cohere Embed semantic retrieval
+- Cohere Rerank candidate ordering
+- Optional structural import expansion
+- Evidence-grounded Cohere Command predictions
+- Local prediction validation and explicit abstention
+- File-level ranking metrics
 
-Semantic retrieval, reranking, prediction and evaluation remain under development.
+Pull-request dataset construction, the ungrounded Command baseline and aggregate benchmarking remain under development.
 
 ## Workshop relationship
 
