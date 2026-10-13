@@ -71,6 +71,10 @@ Retrieves candidates with Cohere Embed and orders them with Cohere Rerank.
 
 Combines semantic similarity with deterministic repository evidence such as symbols, imports and file relationships.
 
+### Baseline 5: Ungrounded Cohere Command
+
+Uses the same change request with repository file paths but without retrieved repository content. This measures whether evidence grounding improves predictions beyond model reasoning alone.
+
 ### Proposed system
 
 Uses structural retrieval, Cohere Embed, Cohere Rerank and Cohere Command to produce evidence-grounded predictions with confidence and abstention.
