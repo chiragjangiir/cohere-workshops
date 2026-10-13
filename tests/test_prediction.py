@@ -117,6 +117,20 @@ def test_generates_validated_grounded_prediction() -> None:
     assert call["model"] == COMMAND_MODEL
     assert call["temperature"] == 0
     assert call["response_format"]["type"] == "json_object"
+    schema = call["response_format"]["schema"]
+    properties = schema["properties"]
+    prediction_properties = properties["predictions"]["items"][
+        "properties"
+    ]
+    assert prediction_properties["path"]["enum"] == [
+        "src/cohere_workshops/scanner.py"
+    ]
+    assert prediction_properties["symbols"]["items"]["enum"] == [
+        "scan_repository"
+    ]
+    assert prediction_properties["evidence_chunk_ids"]["items"][
+        "enum"
+    ] == ["scanner-chunk"]
 
 
 def test_rejects_hallucinated_file_path() -> None:

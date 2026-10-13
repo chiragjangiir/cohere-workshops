@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import Sequence
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -93,6 +94,37 @@ def _chunk_from_result(result: RerankedChunk):
     return result.retrieved_chunk.embedded_chunk.chunk
 
 
+def _schema_for_evidence(
+    evidence: Sequence[RerankedChunk],
+) -> dict[str, object]:
+    """Constrain generated identifiers to retrieved repository evidence."""
+    schema = deepcopy(PREDICTION_SCHEMA)
+    chunks = [_chunk_from_result(result) for result in evidence]
+    paths = sorted({chunk.path for chunk in chunks})
+    chunk_ids = sorted({chunk.chunk_id for chunk in chunks})
+    symbols = sorted(
+        {
+            chunk.symbol
+            for chunk in chunks
+            if chunk.symbol is not None
+        }
+    )
+
+    prediction_properties = schema["properties"]["predictions"][
+        "items"
+    ]["properties"]
+    prediction_properties["path"]["enum"] = paths
+    prediction_properties["evidence_chunk_ids"]["items"]["enum"] = (
+        chunk_ids
+    )
+    schema["properties"]["predicted_tests"]["items"]["enum"] = paths
+
+    if symbols:
+        prediction_properties["symbols"]["items"]["enum"] = symbols
+
+    return schema
+
+
 def build_prediction_prompt(
     query: str,
     evidence: Sequence[RerankedChunk],
@@ -127,8 +159,7 @@ Rules:
 1. Use only the repository evidence below.
 2. Predict only paths that appear in the evidence.
 3. Every prediction must cite at least one listed chunk_id.
-4. Include only symbols explicitly shown in the evidence.
-5. Confidence must be between 0 and 1.
+4. Copy symbols exactly from the evidence symbol fields. When no applicable symbol is shown for a path, use an empty symbols array.\n5. Confidence must be between 0 and 1.
 6. If the evidence is insufficient, abstain and explain why.
 7. Do not invent files, symbols, tests, or dependencies.
 
@@ -177,11 +208,13 @@ def _parse_prediction(
     chunks = [_chunk_from_result(result) for result in evidence]
     allowed_paths = {chunk.path for chunk in chunks}
     allowed_chunk_ids = {chunk.chunk_id for chunk in chunks}
-    allowed_symbols = {
-        chunk.symbol
-        for chunk in chunks
-        if chunk.symbol is not None
+    allowed_symbols_by_path: dict[str, set[str]] = {
+        path: set() for path in allowed_paths
     }
+
+    for chunk in chunks:
+        if chunk.symbol is not None:
+            allowed_symbols_by_path[chunk.path].add(chunk.symbol)
 
     predictions: list[FilePrediction] = []
     prediction_positions: dict[str, int] = {}
@@ -212,7 +245,10 @@ def _parse_prediction(
             "evidence_chunk_ids",
         )
 
-        if any(symbol not in allowed_symbols for symbol in symbols):
+        if any(
+            symbol not in allowed_symbols_by_path[path]
+            for symbol in symbols
+        ):
             raise ValueError("prediction contains an unsupported symbol")
         if not evidence_ids:
             raise ValueError("each prediction requires repository evidence")
@@ -323,7 +359,7 @@ def predict_change_impact(
         ],
         response_format={
             "type": "json_object",
-            "schema": PREDICTION_SCHEMA,
+            "schema": _schema_for_evidence(evidence),
         },
         temperature=0,
     )
