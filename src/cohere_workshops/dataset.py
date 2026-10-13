@@ -37,8 +37,13 @@ def _required_string(payload: dict[str, object], field: str) -> str:
     return value
 
 
-def _repository_paths(value: object, field: str) -> tuple[str, ...]:
-    if not isinstance(value, list) or not value:
+def _repository_paths(
+    value: object,
+    field: str,
+    *,
+    allow_empty: bool = False,
+) -> tuple[str, ...]:
+    if not isinstance(value, list) or (not value and not allow_empty):
         raise ValueError(f"{field} must be a non-empty list")
     if not all(isinstance(item, str) and item for item in value):
         raise ValueError(f"{field} must contain non-empty strings")
@@ -94,6 +99,7 @@ def _parse_case(payload: object) -> EvaluationCase:
     ground_truth_test_files = _repository_paths(
         payload.get("ground_truth_test_files"),
         "ground_truth_test_files",
+        allow_empty=True,
     )
 
     if not set(ground_truth_test_files).issubset(ground_truth_files):
