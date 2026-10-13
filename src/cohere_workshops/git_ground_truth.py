@@ -72,7 +72,7 @@ def extract_diff_ground_truth(
     post_change = _verify_commit(
         repository,
         post_change_commit,
-        "post_chane_commit",
+        "post_change_commit",
     )
     output = _git(
         repository,
@@ -93,6 +93,7 @@ def extract_diff_ground_truth(
         files=files,
         test_files=tuple(path for path in files if is_test_path(path)),
     )
+
 
 def verify_case_ground_truth(
     repository: Path,
