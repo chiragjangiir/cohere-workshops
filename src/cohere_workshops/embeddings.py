@@ -34,7 +34,8 @@ def format_chunk_for_embedding(chunk: RepositoryChunk) -> str:
         f"language: {chunk.language}\n"
         f"kind: {chunk.kind}\n"
         f"symbol: {symbol}\n"
-        f"lines: {chunk.start_line}-{chunk.end_line}\n\n"
+        f"lines: {chunk.start_line}-{chunk.end_line}\n"
+        f"part: {chunk.part_index}/{chunk.part_count}\n\n"
         f"{chunk.content}"
     )
 
