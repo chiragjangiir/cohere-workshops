@@ -1,0 +1,129 @@
+{
+  "root": "cohere-workshops",
+  "query": "Split repository chunks that exceed safe model input limits while preserving complete source coverage and traceable line ranges",
+  "embed_model": "embed-v4.0",
+  "rerank_model": "rerank-v4.0-pro",
+  "chunk_count": 166,
+  "exclusions": [
+    {
+      "path": ".env",
+      "reason": "sensitive_path"
+    },
+    {
+      "path": "tests/test_chunks.py",
+      "reason": "suspected_secret"
+    },
+    {
+      "path": "tests/test_corpus.py",
+      "reason": "suspected_secret"
+    },
+    {
+      "path": "tests/test_mapper.py",
+      "reason": "suspected_secret"
+    },
+    {
+      "path": "tests/test_safety.py",
+      "reason": "suspected_secret"
+    }
+  ],
+  "errors": [],
+  "evidence": [
+    {
+      "rank": 1,
+      "path": "src/cohere_workshops/chunks.py",
+      "kind": "file",
+      "symbol": null,
+      "start_line": 1,
+      "end_line": 100,
+      "chunk_id": "9a7a069de5386b117813a7f33e5e5996708da8714c5bab82d3712c2a489bfa50",
+      "content_hash": "a363cda0f7391400341462be1ffb8038cd58ccdeacd0bc197c1cada5f2fec321",
+      "source_hash": "a363cda0f7391400341462be1ffb8038cd58ccdeacd0bc197c1cada5f2fec321",
+      "semantic_score": 0.4845936880760019,
+      "rerank_score": 0.878356,
+      "original_retrieval_rank": 1
+    },
+    {
+      "rank": 2,
+      "path": "src/cohere_workshops/corpus.py",
+      "kind": "file",
+      "symbol": null,
+      "start_line": 1,
+      "end_line": 74,
+      "chunk_id": "7b194fcdb0852b8470cf29c816a3c5742758c6d9e715bcc03635472f4c584a6f",
+      "content_hash": "a06f3dc7e6875a70cf25e2620b84a1e32c419978f0bd1d541608cda6d9ee3bc7",
+      "source_hash": "a06f3dc7e6875a70cf25e2620b84a1e32c419978f0bd1d541608cda6d9ee3bc7",
+      "semantic_score": 0.4451674922989917,
+      "rerank_score": 0.8632072,
+      "original_retrieval_rank": 2
+    },
+    {
+      "rank": 3,
+      "path": "src/cohere_workshops/chunks.py",
+      "kind": "class",
+      "symbol": "RepositoryChunk",
+      "start_line": 12,
+      "end_line": 24,
+      "chunk_id": "1a039db0b110e1985898c1a929659caf8849ece236c26a56bfe0e82195b5a7e7",
+      "content_hash": "6b6874167208cb4820501aae88e8630527d24920c225cb87c458fa520a6cc161",
+      "source_hash": "a363cda0f7391400341462be1ffb8038cd58ccdeacd0bc197c1cada5f2fec321",
+      "semantic_score": 0.42839680649926387,
+      "rerank_score": 0.8053874,
+      "original_retrieval_rank": 3
+    },
+    {
+      "rank": 4,
+      "path": "src/cohere_workshops/embeddings.py",
+      "kind": "function",
+      "symbol": "format_chunk_for_embedding",
+      "start_line": 29,
+      "end_line": 39,
+      "chunk_id": "d675da25f174e7d7e025dd459143213400067584fb82c3e780c5f4dc14be4359",
+      "content_hash": "037675509b3d8fddfae60ae274996c919fc772289ea4c12eeb8725904b45837c",
+      "source_hash": "ac8f77ace189e2353db922384e8eb0066906e25e56bf6ce5c802461fe6d778a2",
+      "semantic_score": 0.3784481035198271,
+      "rerank_score": 0.76178664,
+      "original_retrieval_rank": 10
+    },
+    {
+      "rank": 5,
+      "path": "src/cohere_workshops/chunks.py",
+      "kind": "function",
+      "symbol": "chunk_document",
+      "start_line": 64,
+      "end_line": 100,
+      "chunk_id": "96576b3b8a28b7e6d13a174faa8e5804850b8da17109aa1f7c1136df74790fda",
+      "content_hash": "f8687d5a11dacac50c7cc974686e6e52a8881dad2ee0a6515d24e8e8240fc4d9",
+      "source_hash": "a363cda0f7391400341462be1ffb8038cd58ccdeacd0bc197c1cada5f2fec321",
+      "semantic_score": 0.41469166183315853,
+      "rerank_score": 0.7229966,
+      "original_retrieval_rank": 5
+    }
+  ],
+  "prediction": {
+    "abstain": false,
+    "abstention_reason": "",
+    "predictions": [
+      {
+        "path": "src/cohere_workshops/chunks.py",
+        "symbols": [
+          "RepositoryChunk",
+          "chunk_document"
+        ],
+        "evidence_chunk_ids": [
+          "9a7a069de5386b117813a7f33e5e5996708da8714c5bab82d3712c2a489bfa50",
+          "1a039db0b110e1985898c1a929659caf8849ece236c26a56bfe0e82195b5a7e7",
+          "96576b3b8a28b7e6d13a174faa8e5804850b8da17109aa1f7c1136df74790fda"
+        ],
+        "confidence": 0.7,
+        "reason": "The change requires modifying chunk_document to split large file chunks, which directly impacts the RepositoryChunk class definition and the chunk_document function that creates chunks."
+      }
+    ],
+    "predicted_tests": [],
+    "unresolved_questions": [
+      "What is the defined safe model input limit (e.g., token count) that triggers chunk splitting?",
+      "How should content_hash and source_hash be computed for split chunks to maintain determinism?",
+      "Will the embeddings formatter need updates to handle multiple chunks per original file?"
+    ],
+    "model": "command-a-plus-05-2026"
+  }
+}
