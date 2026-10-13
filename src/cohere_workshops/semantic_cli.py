@@ -10,6 +10,7 @@ from pathlib import Path
 import cohere
 from dotenv import load_dotenv
 
+from cohere_workshops.corpus import build_repository_corpus
 from cohere_workshops.embeddings import EMBED_MODEL
 from cohere_workshops.prediction import predict_change_impact
 from cohere_workshops.reranking import RERANK_MODEL
@@ -17,6 +18,7 @@ from cohere_workshops.semantic import (
     SemanticSearchResult,
     semantic_search_repository,
 )
+from cohere_workshops.ungrounded import predict_ungrounded_change_impact
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -52,10 +54,19 @@ def build_parser() -> argparse.ArgumentParser:
         default=10,
         help="Maximum number of structurally related chunks to add.",
     )
-    parser.add_argument(
+    prediction_mode = parser.add_mutually_exclusive_group()
+    prediction_mode.add_argument(
         "--predict",
         action="store_true",
         help="Generate a grounded Command change-impact prediction.",
+    )
+    prediction_mode.add_argument(
+        "--ungrounded",
+        action="store_true",
+        help=(
+            "Generate a Command baseline using repository paths but "
+            "no source evidence."
+        ),
     )
     return parser
 
@@ -113,24 +124,48 @@ def main(arguments: Sequence[str] | None = None) -> None:
         api_key=api_key,
         log_warning_experimental_features=False,
     )
-    result = semantic_search_repository(
-        client,
-        Path(options.repository),
-        options.query,
-        retrieval_k=options.retrieval_k,
-        rerank_k=options.rerank_k,
-        structural_expansion=options.structural,
-        max_structural_expansions=options.max_structural_expansions,
-    )
-    payload = serialize_search_result(result, options.query)
+    repository = Path(options.repository)
 
-    if options.predict:
-        prediction = predict_change_impact(
+    if options.ungrounded:
+        corpus = build_repository_corpus(repository)
+        paths = tuple(
+            dict.fromkeys(chunk.path for chunk in corpus.chunks)
+        )
+        prediction = predict_ungrounded_change_impact(
             client,
             options.query,
-            result.results,
+            paths,
         )
-        payload["prediction"] = asdict(prediction)
+        payload = {
+            "root": corpus.root,
+            "query": options.query,
+            "baseline": "ungrounded_command",
+            "repository_path_count": len(paths),
+            "exclusions": [asdict(item) for item in corpus.exclusions],
+            "errors": [asdict(item) for item in corpus.errors],
+            "prediction": asdict(prediction),
+        }
+    else:
+        result = semantic_search_repository(
+            client,
+            repository,
+            options.query,
+            retrieval_k=options.retrieval_k,
+            rerank_k=options.rerank_k,
+            structural_expansion=options.structural,
+            max_structural_expansions=(
+                options.max_structural_expansions
+            ),
+        )
+        payload = serialize_search_result(result, options.query)
+
+        if options.predict:
+            prediction = predict_change_impact(
+                client,
+                options.query,
+                result.results,
+            )
+            payload["prediction"] = asdict(prediction)
 
     print(json.dumps(payload, indent=2))
 

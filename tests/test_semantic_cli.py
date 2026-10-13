@@ -53,3 +53,21 @@ def test_accepts_structural_expansion_option() -> None:
 
     assert options.structural is True
     assert options.max_structural_expansions == 10
+
+
+def test_accepts_ungrounded_baseline_option() -> None:
+    options = build_parser().parse_args(
+        [".", "Update scanning", "--ungrounded"]
+    )
+
+    assert options.ungrounded is True
+    assert options.predict is False
+
+
+def test_rejects_grounded_and_ungrounded_together() -> None:
+    import pytest
+
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(
+            [".", "Update scanning", "--predict", "--ungrounded"]
+        )
