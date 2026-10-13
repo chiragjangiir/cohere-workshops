@@ -11,6 +11,7 @@ import cohere
 from dotenv import load_dotenv
 
 from cohere_workshops.embeddings import EMBED_MODEL
+from cohere_workshops.prediction import predict_change_impact
 from cohere_workshops.reranking import RERANK_MODEL
 from cohere_workshops.semantic import (
     SemanticSearchResult,
@@ -39,6 +40,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=10,
         help="Number of candidates to return after reranking.",
+    )
+    parser.add_argument(
+        "--predict",
+        action="store_true",
+        help="Generate a grounded Command change-impact prediction.",
     )
     return parser
 
@@ -100,6 +106,15 @@ def main(arguments: Sequence[str] | None = None) -> None:
         rerank_k=options.rerank_k,
     )
     payload = serialize_search_result(result, options.query)
+
+    if options.predict:
+        prediction = predict_change_impact(
+            client,
+            options.query,
+            result.results,
+        )
+        payload["prediction"] = asdict(prediction)
+
     print(json.dumps(payload, indent=2))
 
 

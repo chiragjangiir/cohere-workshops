@@ -1,7 +1,10 @@
 from cohere_workshops.corpus import CorpusError
 from cohere_workshops.scanner import ExcludedFile
 from cohere_workshops.semantic import SemanticSearchResult
-from cohere_workshops.semantic_cli import serialize_search_result
+from cohere_workshops.semantic_cli import (
+    build_parser,
+    serialize_search_result,
+)
 
 
 def test_serializes_metadata_without_vectors_or_source_content() -> None:
@@ -31,3 +34,12 @@ def test_serializes_metadata_without_vectors_or_source_content() -> None:
     assert payload["evidence"] == []
     assert "vector" not in payload
     assert "content" not in payload
+
+
+
+def test_accepts_grounded_prediction_option() -> None:
+    options = build_parser().parse_args(
+        [".", "Update scanning", "--predict"]
+    )
+
+    assert options.predict is True
