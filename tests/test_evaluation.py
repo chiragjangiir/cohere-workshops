@@ -1,6 +1,7 @@
 import pytest
 
 from cohere_workshops.evaluation import (
+    calculate_test_file_recall,
     deduplicate_paths,
     evaluate_file_ranking,
 )
@@ -54,3 +55,16 @@ def test_scores_missing_relevant_files_as_zero() -> None:
 def test_requires_non_empty_ground_truth() -> None:
     with pytest.raises(ValueError, match="ground truth"):
         evaluate_file_ranking(("README.md",), ())
+
+def test_calculates_calculate_test_file_recall_separately() -> None:
+    recall = calculate_test_file_recall(
+        ("tests/test_chunks.py", "tests/test_extra.py"),
+        ("tests/test_chunks.py", "tests/test_embeddings.py"),
+    )
+
+    assert recall == 0.5
+
+
+def test_requires_non_empty_test_ground_truth() -> None:
+    with pytest.raises(ValueError, match="test ground truth"):
+        calculate_test_file_recall(("tests/test_chunks.py",), ())

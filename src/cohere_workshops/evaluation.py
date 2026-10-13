@@ -85,3 +85,16 @@ def evaluate_file_ranking(
         reciprocal_rank=reciprocal_rank,
         average_precision=average_precision,
     )
+
+def calculate_test_file_recall(
+    predicted_test_paths: Iterable[str],
+    ground_truth_test_paths: Iterable[str],
+) -> float:
+    """Return the proportion of changed test files that were predicted."""
+    predicted = set(predicted_test_paths)
+    ground_truth = set(ground_truth_test_paths)
+
+    if not ground_truth:
+        raise ValueError("test ground truth must contain at least one file")
+
+    return len(predicted & ground_truth) / len(ground_truth)
