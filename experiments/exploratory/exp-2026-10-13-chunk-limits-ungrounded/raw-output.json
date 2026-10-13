@@ -1,0 +1,143 @@
+{
+  "root": "cohere-workshops",
+  "query": "Split repository chunks that exceed safe model input limits while preserving complete source coverage and traceable line ranges",
+  "baseline": "ungrounded_command",
+  "repository_path_count": 52,
+  "exclusions": [
+    {
+      "path": ".env",
+      "reason": "sensitive_path"
+    }
+  ],
+  "errors": [],
+  "prediction": {
+    "abstain": false,
+    "abstention_reason": "",
+    "predictions": [
+      {
+        "path": "src/cohere_workshops/chunks.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.9,
+        "reason": "Directly implements chunk creation and splitting logic; will need new logic to split oversized chunks and preserve line range mapping."
+      },
+      {
+        "path": "src/cohere_workshops/scanner.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.7,
+        "reason": "Scans repository files; will need to handle new chunk boundaries and possibly re-scan after splitting."
+      },
+      {
+        "path": "src/cohere_workshops/retrieval.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.6,
+        "reason": "Performs document retrieval; may need to adjust to work with split chunks and maintain coverage."
+      },
+      {
+        "path": "src/cohere_workshops/structural_retrieval.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.6,
+        "reason": "Handles structural retrieval; likely impacted by changed chunk boundaries and line range tracking."
+      },
+      {
+        "path": "src/cohere_workshops/mapper.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.5,
+        "reason": "Maps chunks to original source coverage; will need updates to reflect split chunks and preserve traceability."
+      },
+      {
+        "path": "src/cohere_workshops/documents.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.5,
+        "reason": "Manages document objects; may need to support multiple chunk representations per original document."
+      },
+      {
+        "path": "src/cohere_workshops/prediction.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.4,
+        "reason": "Runs predictions on chunks; may need to adjust input handling for newly split chunks."
+      },
+      {
+        "path": "src/cohere_workshops/evaluation.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.4,
+        "reason": "Evaluates chunk coverage and quality; will likely need to account for split chunks and line range integrity."
+      },
+      {
+        "path": "src/cohere_workshops/semantic.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.3,
+        "reason": "Generates semantic embeddings; could be affected if chunk size changes influence embedding quality or batching."
+      },
+      {
+        "path": "src/cohere_workshops/embeddings.py",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.3,
+        "reason": "Manages embedding generation; may need to handle new chunk sizes and batch limits."
+      },
+      {
+        "path": "README.md",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.4,
+        "reason": "Documentation may need updates to describe new chunk splitting behavior and usage."
+      },
+      {
+        "path": "docs/engineering/architecture.md",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.4,
+        "reason": "Architecture documentation should reflect updated chunking component and its interaction with other modules."
+      },
+      {
+        "path": "docs/engineering/decisions.md",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.3,
+        "reason": "Decision log may need an entry recording the change to split oversized chunks."
+      },
+      {
+        "path": "experiments/exploratory/exp-2026-10-13-chunk-limits-prediction/metadata.json",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.8,
+        "reason": "Experiment metadata likely needs to be updated to reflect new chunking strategy and limits."
+      },
+      {
+        "path": "experiments/exploratory/exp-2026-10-13-chunk-limits-prediction/raw-output.json",
+        "symbols": [],
+        "evidence_chunk_ids": [],
+        "confidence": 0.8,
+        "reason": "Experiment raw output will change because the chunking algorithm is modified."
+      }
+    ],
+    "predicted_tests": [
+      "tests/test_chunks.py",
+      "tests/test_scanner.py",
+      "tests/test_retrieval.py",
+      "tests/test_structural_retrieval.py",
+      "tests/test_mapper.py",
+      "tests/test_documents.py",
+      "tests/test_prediction.py",
+      "tests/test_evaluation.py",
+      "tests/test_semantic.py",
+      "tests/test_embeddings.py"
+    ],
+    "unresolved_questions": [
+      "What is the exact safe model input limit (token count) that triggers chunk splitting?",
+      "How are line ranges currently stored and how will they be updated to remain traceable after splitting?",
+      "Will the change affect any existing public APIs, command-line interfaces, or configuration files?",
+      "What performance impact is expected from increased number of chunks and re-scanning steps?"
+    ],
+    "model": "command-a-plus-05-2026"
+  }
+}

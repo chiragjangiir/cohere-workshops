@@ -1,0 +1,67 @@
+{
+  "experiment_id": "exp-2026-10-13-chunk-limits-ungrounded",
+  "status": "exploratory",
+  "date": "2026-10-13",
+  "application_commit": "956d39d8eeed0bab4f0f9345dd9a03a22f7c4d9e",
+  "repository_url": "https://github.com/dunia-hub/cohere-workshops.git",
+  "repository_commit": "956d39d8eeed0bab4f0f9345dd9a03a22f7c4d9e",
+  "query": "Split repository chunks that exceed safe model input limits while preserving complete source coverage and traceable line ranges",
+  "configuration": "ungrounded_command",
+  "model": "command-a-plus-05-2026",
+  "repository_path_count": 52,
+  "key_type": "trial",
+  "ground_truth_files": [
+    "src/cohere_workshops/chunks.py",
+    "src/cohere_workshops/embeddings.py",
+    "tests/test_chunks.py"
+  ],
+  "ground_truth_test_files": [
+    "tests/test_chunks.py"
+  ],
+  "ranking_metrics": {
+    "predicted_files": [
+      "src/cohere_workshops/chunks.py",
+      "src/cohere_workshops/scanner.py",
+      "src/cohere_workshops/retrieval.py",
+      "src/cohere_workshops/structural_retrieval.py",
+      "src/cohere_workshops/mapper.py",
+      "src/cohere_workshops/documents.py",
+      "src/cohere_workshops/prediction.py",
+      "src/cohere_workshops/evaluation.py",
+      "src/cohere_workshops/semantic.py",
+      "src/cohere_workshops/embeddings.py",
+      "README.md",
+      "docs/engineering/architecture.md",
+      "docs/engineering/decisions.md",
+      "experiments/exploratory/exp-2026-10-13-chunk-limits-prediction/metadata.json",
+      "experiments/exploratory/exp-2026-10-13-chunk-limits-prediction/raw-output.json"
+    ],
+    "ground_truth_files": [
+      "src/cohere_workshops/chunks.py",
+      "src/cohere_workshops/embeddings.py",
+      "tests/test_chunks.py"
+    ],
+    "recall_at_k": {
+      "1": 0.3333333333333333,
+      "3": 0.3333333333333333,
+      "5": 0.3333333333333333,
+      "10": 0.6666666666666666
+    },
+    "precision_at_k": {
+      "1": 1.0,
+      "3": 0.3333333333333333,
+      "5": 0.2,
+      "10": 0.2
+    },
+    "reciprocal_rank": 1.0,
+    "average_precision": 0.39999999999999997
+  },
+  "test_file_recall": 1.0,
+  "latency": "not_recorded",
+  "api_usage": "not_recorded",
+  "notes": [
+    "Exploratory development run, not part of the final evaluation set.",
+    "Uses only the change request and repository paths, without source content or retrieved evidence.",
+    "Compared with the grounded exploratory run for the same development query."
+  ]
+}
