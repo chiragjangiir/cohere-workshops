@@ -308,5 +308,22 @@ def predict_change_impact(
     if not content:
         raise ValueError("Cohere returned an empty prediction response")
 
-    payload = json.loads(content[0].text)
+    response_text = None
+
+    for item in content:
+        try:
+            candidate_text = item.text
+        except AttributeError:
+            continue
+
+        if isinstance(candidate_text, str):
+            response_text = candidate_text
+            break
+
+    if response_text is None:
+        raise ValueError(
+            "Cohere prediction response did not contain a text block"
+        )
+
+    payload = json.loads(response_text)
     return _parse_prediction(payload, evidence, model)

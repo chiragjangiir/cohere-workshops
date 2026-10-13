@@ -19,8 +19,13 @@ class FakeText:
 
 
 @dataclass
+class FakeThinking:
+    thinking: str = "internal reasoning"
+
+
+@dataclass
 class FakeMessage:
-    content: list[FakeText]
+    content: list[object]
 
 
 @dataclass
@@ -36,7 +41,12 @@ class FakeClient:
     def chat(self, **kwargs: object) -> object:
         self.calls.append(kwargs)
         return FakeResponse(
-            FakeMessage([FakeText(json.dumps(self.payload))])
+            FakeMessage(
+                [
+                    FakeThinking(),
+                    FakeText(json.dumps(self.payload)),
+                ]
+            )
         )
 
 

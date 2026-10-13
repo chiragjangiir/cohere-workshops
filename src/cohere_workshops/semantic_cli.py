@@ -97,7 +97,10 @@ def main(arguments: Sequence[str] | None = None) -> None:
     if not api_key:
         raise RuntimeError("COHERE_API_KEY is missing from .env")
 
-    client = cohere.ClientV2(api_key=api_key)
+    client = cohere.ClientV2(
+        api_key=api_key,
+        log_warning_experimental_features=False,
+    )
     result = semantic_search_repository(
         client,
         Path(options.repository),
