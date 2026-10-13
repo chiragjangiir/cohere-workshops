@@ -112,7 +112,7 @@ It currently supports:
 - Local prediction validation and explicit abstention
 - File-level ranking metrics
 
-Pull-request dataset construction, the ungrounded Command baseline and aggregate benchmarking remain under development.
+Pull-request dataset construction and aggregate benchmarking remain under development.
 
 ## Workshop relationship
 

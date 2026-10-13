@@ -126,7 +126,7 @@ Development cases remain separate from the final evaluation dataset.
 - Structural parsing supports Python only.
 - Formal pull-request dataset construction is not implemented.
 - Embeddings are not cached between runs.
-- The ungrounded Command baseline and aggregate benchmark runner are not implemented.
+- The aggregate benchmark runner is not implemented.
 - Dependency locking and continuous integration are not configured.
 - Current experiment records are exploratory, not final results.
 

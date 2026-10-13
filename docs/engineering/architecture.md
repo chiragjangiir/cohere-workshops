@@ -208,7 +208,6 @@ Exploratory development runs are stored separately from the final evaluation dat
 The prototype still requires:
 
 - a reproducible pull-request dataset builder and manifest;
-- an ungrounded Command baseline;
 - an aggregate benchmark runner for every configuration;
 - embedding caching;
 - exact dependency locking;

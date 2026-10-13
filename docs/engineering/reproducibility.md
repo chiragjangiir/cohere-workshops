@@ -262,7 +262,6 @@ The project does not yet have:
 - A formal pull-request dataset manifest and builder
 - A versioned prompt registry
 - Complete stored latency and API-usage records
-- An ungrounded Command baseline
 - Automated aggregate benchmark commands
 - Embedding caching
 - Continuous-integration configuration
