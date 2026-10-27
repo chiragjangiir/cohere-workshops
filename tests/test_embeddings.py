@@ -78,6 +78,25 @@ def test_embeds_change_request_in_query_mode() -> None:
     assert client.calls[0]["input_type"] == "search_query"
 
 
+def test_reads_cohere_sdk_float_field() -> None:
+    from cohere.core.unchecked_base_model import construct_type
+    from cohere.types import EmbedByTypeResponse
+
+    class SdkClient:
+        def embed(self, **kwargs: object) -> object:
+            return construct_type(
+                type_=EmbedByTypeResponse,
+                object_={
+                    "id": "test",
+                    "response_type": "embeddings_by_type",
+                    "texts": kwargs["texts"],
+                    "embeddings": {"float": [[0.5, 0.25]]},
+                },
+            )
+
+    assert embed_query(SdkClient(), "Find the scanner") == (0.5, 0.25)
+
+
 def test_rejects_empty_query() -> None:
     with pytest.raises(ValueError, match="query must not be empty"):
         embed_query(FakeClient(), "   ")

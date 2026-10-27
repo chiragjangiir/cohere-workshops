@@ -45,7 +45,11 @@ def _extract_float_vectors(
     expected_count: int,
 ) -> tuple[tuple[float, ...], ...]:
     embeddings = getattr(response, "embeddings", None)
-    vectors = getattr(embeddings, "float", None)
+    # The Cohere SDK exposes float vectors as `float_` because `float` is a
+    # Python built-in. `float` is kept for simple test doubles.
+    vectors = getattr(embeddings, "float_", None)
+    if vectors is None:
+        vectors = getattr(embeddings, "float", None)
 
     if vectors is None:
         raise ValueError("Cohere response did not contain float embeddings")
