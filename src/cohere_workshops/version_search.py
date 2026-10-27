@@ -5,6 +5,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from cohere_workshops.chunks import RepositoryChunk
 from cohere_workshops.embeddings import (
     EMBED_MODEL,
     EmbedClient,
@@ -46,16 +47,24 @@ class QueryResult:
     summary: VersionSummary
 
 
+def matches_level(chunk: RepositoryChunk, level: str) -> bool:
+    """Return whether a chunk belongs to the symbol or file level."""
+    if level not in LEVELS:
+        raise ValueError(f"level must be one of {LEVELS}")
+    return (chunk.kind == "file") == (level == "file")
+
+
 def select_level(
     chunks: Sequence[VersionedChunk],
     level: str,
 ) -> tuple[VersionedChunk, ...]:
     """Keep symbol chunks (functions, classes) or whole-file chunks."""
-    if level not in LEVELS:
-        raise ValueError(f"level must be one of {LEVELS}")
-    if level == "file":
-        return tuple(item for item in chunks if item.chunk.kind == "file")
-    return tuple(item for item in chunks if item.chunk.kind != "file")
+    return tuple(item for item in chunks if matches_level(item.chunk, level))
+
+
+def count_unchanged(corpus: VersionedCorpus, level: str) -> int:
+    """Count skipped unchanged previous chunks at one level only."""
+    return sum(matches_level(chunk, level) for chunk in corpus.unchanged)
 
 
 def summarize_hits(hits: Sequence[VersionHit]) -> VersionSummary:

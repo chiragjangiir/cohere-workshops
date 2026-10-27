@@ -7,6 +7,7 @@ import pytest
 from cohere_workshops.chunks import RepositoryChunk
 from cohere_workshops.version_search import (
     append_records,
+    count_unchanged,
     search_versions,
     select_level,
     serialize_query_result,
@@ -96,7 +97,7 @@ def make_corpus(items: tuple[VersionedChunk, ...]) -> VersionedCorpus:
         previous=RevisionSnapshot("v1", OLD_COMMIT, (), (), ()),
         current=RevisionSnapshot("v2", NEW_COMMIT, (), (), ()),
         chunks=items,
-        unchanged_count=0,
+        unchanged=(),
     )
 
 
@@ -177,3 +178,18 @@ def test_records_traceable_results_without_source(
     assert saved["results"][0]["status"] == SUPERSEDED
     assert "content" not in saved["results"][0]
     assert "def fee" not in lines[0]
+
+
+def test_counts_unchanged_chunks_per_level() -> None:
+    unchanged_file = make_item("old-file", "whole file", SUPERSEDED, kind="file").chunk
+    unchanged_symbol = make_item("old-receipt", "receipt", SUPERSEDED).chunk
+    corpus = VersionedCorpus(
+        previous=RevisionSnapshot("v1", OLD_COMMIT, (), (), ()),
+        current=RevisionSnapshot("v2", NEW_COMMIT, (), (), ()),
+        chunks=(),
+        unchanged=(unchanged_file, unchanged_symbol),
+    )
+
+    assert corpus.unchanged_count == 2
+    assert count_unchanged(corpus, "symbol") == 1
+    assert count_unchanged(corpus, "file") == 1

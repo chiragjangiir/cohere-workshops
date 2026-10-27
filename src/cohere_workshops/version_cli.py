@@ -17,7 +17,9 @@ from cohere_workshops.version_search import (
     LEVELS,
     QueryResult,
     append_records,
+    count_unchanged,
     search_versions,
+    select_level,
     serialize_query_result,
 )
 from cohere_workshops.versions import VersionedCorpus, build_versioned_corpus
@@ -97,11 +99,7 @@ def _create_client(offline: bool) -> object:
 
 
 def print_corpus_summary(corpus: VersionedCorpus, level: str) -> None:
-    counts = Counter(
-        item.status
-        for item in corpus.chunks
-        if (item.chunk.kind == "file") == (level == "file")
-    )
+    counts = Counter(item.status for item in select_level(corpus.chunks, level))
     print(
         f"{corpus.previous.revision} ({corpus.previous.commit[:7]}) -> "
         f"{corpus.current.revision} ({corpus.current.commit[:7]})"
@@ -110,7 +108,7 @@ def print_corpus_summary(corpus: VersionedCorpus, level: str) -> None:
         f"Indexed at {level} level: {counts['current']} current, "
         f"{counts['superseded']} superseded, {counts['removed']} removed"
     )
-    print(f"Skipped {corpus.unchanged_count} unchanged older chunks")
+    print(f"Skipped {count_unchanged(corpus, level)} unchanged older chunks")
 
     for snapshot in (corpus.previous, corpus.current):
         for item in snapshot.exclusions:

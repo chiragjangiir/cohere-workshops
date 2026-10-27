@@ -64,6 +64,7 @@ def test_offline_run_prints_report_and_records_results(
     printed = capsys.readouterr().out
     records = [json.loads(line) for line in output.read_text().splitlines()]
     assert "Indexed at symbol level: 4 current, 2 superseded, 1 removed" in printed
+    assert "Skipped 1 unchanged older chunks" in printed
     assert "Top result is current:" in printed
     assert len(records) == len(version_cli.DEMO_QUERIES)
     assert all(record["embed_model"] == "offline-word-hashing" for record in records)
@@ -73,6 +74,7 @@ def test_offline_run_prints_report_and_records_results(
 def test_file_level_uses_only_file_chunks(
     demo_repository: Path,
     tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     output = tmp_path / "runs.jsonl"
 
@@ -88,7 +90,10 @@ def test_file_level_uses_only_file_chunks(
         ]
     )
 
+    printed = capsys.readouterr().out
     [record] = [json.loads(line) for line in output.read_text().splitlines()]
+    assert "Indexed at file level: 2 current, 1 superseded, 0 removed" in printed
+    assert "Skipped 1 unchanged older chunks" in printed
     assert {result["kind"] for result in record["results"]} == {"file"}
 
 

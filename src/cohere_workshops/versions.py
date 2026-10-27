@@ -50,7 +50,12 @@ class VersionedCorpus:
     previous: RevisionSnapshot
     current: RevisionSnapshot
     chunks: tuple[VersionedChunk, ...]
-    unchanged_count: int
+    unchanged: tuple[RepositoryChunk, ...]
+
+    @property
+    def unchanged_count(self) -> int:
+        """Previous chunks skipped because the current version is identical."""
+        return len(self.unchanged)
 
 
 def _git(repository: Path, *arguments: str) -> bytes:
@@ -162,7 +167,7 @@ def label_versions(
         VersionedChunk(chunk, current.revision, current.commit, CURRENT)
         for chunk in current.chunks
     ]
-    unchanged_count = 0
+    unchanged: list[RepositoryChunk] = []
 
     for chunk in previous.chunks:
         match = current_by_key.get(_version_key(chunk))
@@ -170,7 +175,7 @@ def label_versions(
         if match is None:
             status = REMOVED
         elif match.content_hash == chunk.content_hash:
-            unchanged_count += 1
+            unchanged.append(chunk)
             continue
         else:
             status = SUPERSEDED
@@ -183,7 +188,7 @@ def label_versions(
         previous=previous,
         current=current,
         chunks=tuple(labelled),
-        unchanged_count=unchanged_count,
+        unchanged=tuple(unchanged),
     )
 
 
