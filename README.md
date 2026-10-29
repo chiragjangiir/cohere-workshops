@@ -12,7 +12,8 @@ Dunia Hub's open source workshop series and research project on version-aware co
 
 | Workshop | Topic | What it adds | Command |
 | --- | --- | --- | --- |
-| 1 | Cohere Fundamentals: Models, Prompts, Embeddings and Grounding | Introduction | |
+| 1 | Cohere Fundamentals: Models, Prompts, Embeddings and Grounding | Introduction |
+`cohere-fundamentals`
 | 2 | Cohere Embed: Searching Code Across Repository Versions | Semantic search across two Git versions | `cohere-versions` |
 | 3 | Cohere Rerank: Choosing Current Code Over Stale Context | Reranking plus a Git validity check | `cohere-rerank` |
 | 4 | Cohere Command: Building a Version Aware Code Agent | A read-only agent that answers from validated code | `cohere-agent` |
