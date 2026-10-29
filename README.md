@@ -131,3 +131,7 @@ Development cases remain separate from the final evaluation dataset.
 - Current experiment records are exploratory, not final results.
 
 Workshop materials will be based on the tested implementation and measured results.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
