@@ -1,47 +1,60 @@
 # Cohere Workshops
 
-Dunia Hub's four-part Python workshop and open research project on evidence-grounded change-impact analysis for open-source repositories.
+Dunia Hub's open source workshop series and research project on version-aware code retrieval, supported by Cohere Labs.
 
-The prototype investigates whether deterministic repository analysis combined with Cohere Embed, Rerank, and Command can predict which files and symbols are likely to change for a proposed issue or feature request.
+**Research project:** *Right Code, Wrong Version: Evaluating Temporal Robustness in Repository Level Code Retrieval*
 
-## Current capabilities
+**The question:** when an AI system searches a code repository, can it tell current code from old code that has since been changed or deleted?
 
-- Safe repository scanning with file-size limits and Git ignore rules
-- Sensitive filename and secret-pattern detection
-- UTF-8 loading with SHA-256 source hashes
-- Python AST symbols, qualified names, imports, and line ranges
-- Deterministic file and symbol chunks capped at 12,000 characters
-- Cohere `embed-v4.0` document and query embeddings
-- Local cosine retrieval and BM25 keyword baseline
-- Cohere `rerank-v4.0-pro` reranking
-- Optional deterministic import-relationship expansion
-- Cohere `command-a-plus-05-2026` structured predictions
-- Local validation of paths, symbols, evidence IDs, tests, and confidence
-- Explicit abstention when repository evidence is unavailable
-- File-level Recall@K, Precision@K, reciprocal rank, and average precision
-- Auditable exclusions, errors, and exploratory experiment records
+## The workshop series
 
-## Research question
+**From Fundamentals to Version Grounded AI.** Each workshop adds one stage to the same pipeline.
 
-Can an evidence-grounded AI system predict affected parts of a Python repository more accurately than keyword retrieval, embedding retrieval, reranking, or a language model without repository grounding?
+| Workshop | Topic | What it adds | Command |
+| --- | --- | --- | --- |
+| 1 | Cohere Fundamentals: Models, Prompts, Embeddings and Grounding | Introduction | |
+| 2 | Cohere Embed: Searching Code Across Repository Versions | Semantic search across two Git versions | `cohere-versions` |
+| 3 | Cohere Rerank: Choosing Current Code Over Stale Context | Reranking plus a Git validity check | `cohere-rerank` |
+| 4 | Cohere Command: Building a Version Aware Code Agent | A read-only agent that answers from validated code | `cohere-agent` |
 
-Formal evaluation will use historical merged pull requests and only the repository snapshot from before each change.
+## What we found so far
+
+These are exploratory runs on a small practice project and on this repository. They are not final research results.
+
+- **Embed alone:** old code often ranked first, by gaps under 0.01.
+- **Rerank:** improved the order, but old and new code still scored almost the same. Adding commit details to the text Rerank reads made the ranking worse.
+- **Git check:** a simple rule against Git history removed invalid code every time.
+- **Agent:** across four live questions, every answer matched its target commit, with no stale references, even though search put wrong-version code first in 5 of 12 searches.
+
+The lesson: **the model ranks and answers, Git decides what is valid.**
 
 ## Installation
 
-Requirements: Git, Python 3.11 or newer, and a Cohere API key for live requests.
+You need Git, Python 3.11 or newer and a Cohere API key for live runs.
+
+macOS or Linux:
 
 ```bash
 git clone https://github.com/dunia-hub/cohere-workshops.git
 cd cohere-workshops
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+pip install -e ".[dev]"
 cp .env.example .env
 ```
 
-Add the private key to `.env`:
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/dunia-hub/cohere-workshops.git
+cd cohere-workshops
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+Copy-Item .env.example .env
+```
+
+Add your key to `.env`:
 
 ```env
 COHERE_API_KEY=your_private_key
@@ -49,47 +62,81 @@ COHERE_API_KEY=your_private_key
 
 Never commit `.env`.
 
-## Verification
+## Check your setup
 
 ```bash
 ruff check src tests
-pytest
+pytest -q
 ```
 
-Tests use fake Cohere clients and do not spend API credits.
+Tests use fake Cohere clients, so they are free and work offline.
 
-## Commands
+## Quick start
 
-Build a deterministic JSON repository map:
+Create a small practice repository with an old version (`v1`) and a current version (`v2`):
 
 ```bash
-cohere-workshops .
-cohere-workshops /path/to/repository
+cohere-demo-repo
 ```
 
-Run semantic retrieval and reranking:
+Then run each stage:
 
 ```bash
-cohere-search . "Respect Git ignore rules during scanning"
+# Workshop 2: search both versions with Cohere Embed
+cohere-versions demo_repo --old v1 --new v2
+
+# Workshop 3: rerank with Cohere Rerank, check against Git, filter old code
+cohere-rerank demo_repo --old v1 --new v2 --format both
+
+# Workshop 4: ask the agent a question at a target commit
+cohere-agent demo_repo --old v1 --new v2 --question "How is the transfer fee calculated?"
+cohere-agent demo_repo --old v1 --new v2 --target v1 --question "How is the transfer fee calculated?"
 ```
 
-Add structural import relationships:
+No API key yet? Add `--offline` to any of these. Practice mode counts words instead of calling Cohere, so it checks the plumbing but its results are not real.
+
+Every command also works on a real repository with full Git history. For example, this repository before and after a real bug fix:
 
 ```bash
-cohere-search . "Update repository loading" --structural
+cohere-agent . --old d6cb3c2 --new 125198f --question "How are the float vectors read from the Cohere embed response?"
 ```
 
-Generate a grounded change-impact prediction:
+Runs are saved as JSON Lines in `results/`. Records store paths, commit hashes, chunk IDs and scores, never source code, vectors or API keys.
 
-```bash
-cohere-search . "Update repository loading" --structural --predict
+## All commands
+
+| Command | What it does |
+| --- | --- |
+| `cohere-demo-repo` | Creates the practice repository with tags `v1` and `v2` |
+| `cohere-versions` | Searches two versions with Cohere Embed and reports which version ranks first |
+| `cohere-rerank` | Reranks candidates with Cohere Rerank, checks them against Git and filters old code |
+| `cohere-agent` | Read-only agent: Cohere Command calls a search tool, Git validates evidence, Command answers |
+| `cohere-workshops` | Builds a JSON map of a repository: files, symbols, imports, exclusions |
+| `cohere-search` | Change-impact search and grounded prediction for a proposed change |
+| `cohere-case` | Builds an evaluation case from a Git commit range |
+| `cohere-dataset` | Validates an evaluation dataset manifest against Git |
+
+Run any command with `--help` for its options.
+
+## How it works
+
+```mermaid
+flowchart LR
+    Q[Question and target commit] --> C[Cohere Command]
+    C -->|calls search_code| S[Search tool]
+    S --> E[Cohere Embed]
+    E --> R[Cohere Rerank]
+    R --> G[Git validity check]
+    G -->|valid code only| C
+    C --> A[Answer with file and commit references]
+    A --> T[Trace saved to results/]
 ```
 
-Live search commands use Cohere API credits. JSON output excludes API keys, embedding vectors, and complete source content.
+Deterministic code handles file discovery, Git history, version labels, validity, ground truth and metrics. Cohere models handle search, ranking, tool planning and writing. Models are never treated as the source of truth about the repository.
 
-## Safety boundary
+## Safety
 
-Before external processing, the prototype applies directory exclusions, Git ignore rules, sensitive filename checks, file-size limits, and high-confidence secret detection. Every exclusion is recorded. Command output is accepted only when its identifiers are supported by retrieved repository evidence.
+Before any content is sent to Cohere, the pipeline applies Git ignore rules, sensitive filename checks, a 1 MB file size limit and secret detection. Every exclusion is recorded. The agent is read only: it never writes to, commits to or deletes from the repository it analyses.
 
 ## Research configurations
 
@@ -97,10 +144,11 @@ Before external processing, the prototype applies directory exclusions, Git igno
 2. Cohere Embed retrieval
 3. Cohere Embed with Cohere Rerank
 4. Structural and semantic retrieval
-5. Evidence-grounded Command prediction with abstention
-6. Ungrounded language-model baseline (planned)
+5. Ungrounded Cohere Command baseline
+6. Evidence-grounded Cohere Command prediction with abstention
+7. Version-aware retrieval, reranking and agent with Git validation
 
-Development cases remain separate from the final evaluation dataset.
+Development cases stay separate from the final evaluation dataset.
 
 ## Documentation
 
@@ -124,13 +172,15 @@ Development cases remain separate from the final evaluation dataset.
 ## Current limitations
 
 - Structural parsing supports Python only.
-- Formal pull-request dataset construction is not implemented.
 - Embeddings are not cached between runs.
+- No final evaluation dataset has been built yet. The `cohere-case` and `cohere-dataset` commands are ready for it.
 - The aggregate benchmark runner is not implemented.
 - Dependency locking and continuous integration are not configured.
-- Current experiment records are exploratory, not final results.
+- All experiment records so far are exploratory, not final results.
 
-Workshop materials will be based on the tested implementation and measured results.
+## Contributing
+
+We welcome contributions. Read [CONTRIBUTING.md](CONTRIBUTING.md), then pick an issue labelled `good first issue`.
 
 ## License
 
